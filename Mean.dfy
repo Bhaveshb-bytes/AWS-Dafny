@@ -1,4 +1,5 @@
 module Std.Mean {
+
     method Sum(arr: array<int>) returns (total: int) 
         requires arr != null
         ensures total == (sum i | 0 <= i < arr.Length :: arr[i]) {
@@ -14,23 +15,12 @@ module Std.Mean {
         }
     }   
 
-    // Compute the mean of a list of natural numbers.
-    // The result is a rational number represented as a pair (numerator, denominator).
+   method Mean(arr: array<int>) returns (mean: real)
+    requires arr != null && arr.Length > 0
+    ensures mean == (sum i | 0 <= i < arr.Length :: arr[i]) as real / arr.Length
+  {
+    var s := Sum(arr);
+    mean := s as real / arr.Length;
+  }
 
-    method Min(list: array<int>) returns (min: int)
-        requires NonEmpty(list)
-    method Max(list: array<int>) returns (max: int)
-        requires NonEmpty(list)
-
-    method Mean(list: array<int>) returns (mean: int) 
-        ensures Mean(list) == Sum(list) / |list|
-        ensures Min(list) <= Mean(list) <= Max(list) {
-        sum := Sum(list);
-        len := list.Length;
-        if len == 0 {
-            return 0;
-        } else {
-            return sum / len;
-        }
-    }       
 }
