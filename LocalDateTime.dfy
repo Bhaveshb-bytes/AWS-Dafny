@@ -1,8 +1,3 @@
-/*******************************************************************************
- *  Copyright by the contributors to the Dafny Project
- *  SPDX-License-Identifier: MIT
- *******************************************************************************/
-
 include "Duration.dfy"
 include "Timezone.dfy"
 
