@@ -1,122 +1,91 @@
 
 
-module Duration {
+module Std.DateTime.Duration {
 
   // -------------------------
   // Duration s
   // -------------------------
+  // Core constants
+  const MILLISECONDS_PER_SECOND: int := 1000
+  const SECONDS_PER_MINUTE: int := 60
+  const MINUTES_PER_HOUR: int := 60
+  const HOURS_PER_DAY: int := 24
+
+  const MILLIS_PER_SECOND: int := 1000
+  const MILLIS_PER_MINUTE: int := 60 * MILLIS_PER_SECOND
+  const MILLIS_PER_HOUR: int := 60 * MILLIS_PER_MINUTE
+  const MILLIS_PER_DAY: int := 24 * MILLIS_PER_HOUR
+
+
   datatype Duration = Duration(
-    days: int,
     seconds: int,   // 0 <= seconds < 86400
     millis: int     // 0 <= millis < 1000
   )
-
-  function NormalizeDuration(d: int, s: int, m: int): Duration {
-      ensures 0 <= NormalizeDuration(d, s, m).seconds < 86400
-      ensures 0 <= NormalizeDuration(d, s, m).millis < 1000
-    var extraSec := m / 1000;
-    var newMillis := m % 1000;
-    if newMillis < 0 then
-      newMillis := newMillis + 1000;
-      extraSec := extraSec - 1;
-
-    var totalSec := s + extraSec;
-    var extraDays := totalSec / 86400;
-    var newSec := totalSec % 86400;
-    if newSec < 0 then
-      newSec := newSec + 86400;
-      extraDays := extraDays - 1;
-
-    Duration(d + extraDays, newSec, newMillis)
+  
+  predicate IsValid(d: Duration) {
+    0 <= d.seconds < SECONDS_PER_MINUTE &&
+    0 <= d.milliseconds < MILLISECONDS_PER_SECOND
   }
 
-  function DurationBetween(dt1: DateTime, dt2: DateTime): Duration {
-    // naive: no timezone, direct difference in fields (simplified!)
-    // For now, assume valid normalized datetimes
-    // TODO: implement real calendar math
-    Duration(0, 0, 0) // placeholder
+  // Total duration in milliseconds
+  function ToTotalMilliseconds(d: Duration): int
+    requires IsValid(d)
+  {
+    d.seconds * MILLIS_PER_SECOND +
+    d.milliseconds
   }
 
-  // -------------------------
-  // TimeZone
-  // -------------------------
-  datatype TimeZone =
-    | UTC()
-    | FixedOffset(minutes: int)
-    // future extension: rules for DST, named zones, etc.
+    // Build Duration from milliseconds
+   function FromMilliseconds(ms: int): Duration
+      ensures IsValid(FromMilliseconds(ms))
+    {
 
-  // -------------------------
-  // DateTime
-  // -------------------------
-  datatype DateTime = DateTime(
-    year: int,
-    month: int,   // 1-12
-    day: int,     // 1-31
-    hour: int,    // 0-23
-    minute: int,  // 0-59
-    second: int,  // 0-59
-    millis: int,  // 0-999
-    tz: option<TimeZone> // None = LocalDateTime, Some = ZonedDateTime
-  )
+      var seconds := ms / MILLIS_PER_SECOND;
+      var milliseconds := ms % MILLIS_PER_SECOND;
 
-  // -------------------------
-  // Factories
-  // -------------------------
-  function DateTimeOf(y: int, mo: int, d: int,
-                      h: int, mi: int, s: int, ms: int): DateTime {
-    DateTime(y, mo, d, h, mi, s, ms, None)
+      Duration(seconds, milliseconds)
+    }
+  // Equality
+  function Equal(d1: Duration, d2: Duration): bool
+    requires IsValid(d1) && IsValid(d2)
+  {
+    ToTotalMilliseconds(d1) == ToTotalMilliseconds(d2)
   }
 
-  function ZonedDateTimeOf(y: int, mo: int, d: int,
-                           h: int, mi: int, s: int, ms: int,
-                           tz: TimeZone): DateTime {
-    DateTime(y, mo, d, h, mi, s, ms, Some(tz))
+  // Comparison (-1 if d1 < d2, 0 if equal, 1 if greater)
+  function Compare(d1: Duration, d2: Duration): int
+    requires IsValid(d1) && IsValid(d2)
+  {
+    if ToTotalMilliseconds(d1) < ToTotalMilliseconds(d2) then -1
+    else if ToTotalMilliseconds(d1) > ToTotalMilliseconds(d2) then 1
+    else 0
   }
 
-  // -------------------------
-  // Operations
-  // -------------------------
-  function AddDuration(dt: DateTime, dur: Duration): DateTime {
-      ensures AddDuration(dt, dur).year == dt.year  // placeholder
-      ensures AddDuration(dt, dur).tz == dt.tz
-    DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millis + dur.millis, dt.tz)
+  // Addition
+  function Plus(d1: Duration, d2: Duration): Duration
+    requires IsValid(d1) && IsValid(d2)
+    ensures IsValid(Plus(d1, d2))
+  {
+    FromMilliseconds(ToTotalMilliseconds(d1) + ToTotalMilliseconds(d2))
   }
 
-  function SubtractDuration(dt: DateTime, dur: Duration): DateTime {
-    ensures SubtractDuration(dt, dur).tz == dt.tz
-    AddDuration(dt, NormalizeDuration(-dur.days, -dur.seconds, -dur.millis))
+  // Subtraction
+  function Minus(d1: Duration, d2: Duration): Duration
+    requires IsValid(d1) && IsValid(d2)
+    ensures IsValid(Minus(d1, d2))
+  {
+    FromMilliseconds(ToTotalMilliseconds(d1) - ToTotalMilliseconds(d2))
   }
+  function GetSeconds(d: Duration): int { d.seconds }
+  function GetMilliseconds(d: Duration): int { d.milliseconds }
 
-  function Between(dt1: DateTime, dt2: DateTime): Duration {
-    DurationBetween(dt1, dt2)
+  // Formatting
+  function ToString(d: Duration): string
+    requires IsValid(d)
+  {
+    var sign := if ToTotalMilliseconds(d) < 0 then "-" else "";
+    sign +
+    GetSeconds(d).ToString() + "s " +
+    GetMilliseconds(d).ToString() + "ms"
   }
-
-  // -------------------------
-  // Conversion
-  // -------------------------
-  function ToTimestamp(dt: DateTime): int
-   requires dt.tz.Some?
-       ensures ToTimestamp(dt) >= 0
-     {
-       // TODO: implement conversion
-       0
-     }
-
-  // -------------------------
-  // String Formatting
-  // -------------------------
-  function ToString(dt: DateTime): string {
-    ensures |ToString(dt)| > 0
-    dt.year.ToString() + "-" +
-    dt.month.ToString() + "-" +
-    dt.day.ToString() + "T" +
-    dt.hour.ToString() + ":" +
-    dt.minute.ToString() + ":" +
-    dt.second.ToString() + "." +
-    dt.millis.ToString() +
-    (if dt.tz.None? then "" else "Z") // placeholder for timezone
-  }
-}
-//////////////////////////////////////////////////////////
-
-
+ }
