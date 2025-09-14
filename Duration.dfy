@@ -24,7 +24,7 @@ module Std.DateTime.Duration {
   
   predicate IsValid(d: Duration) {
     0 <= d.seconds < SECONDS_PER_MINUTE &&
-    0 <= d.milliseconds < MILLISECONDS_PER_SECOND
+    0 <= d.millis < MILLISECONDS_PER_SECOND
   }
 
   // Total duration in milliseconds
@@ -32,7 +32,7 @@ module Std.DateTime.Duration {
     requires IsValid(d)
   {
     d.seconds * MILLIS_PER_SECOND +
-    d.milliseconds
+    d.millis
   }
 
     // Build Duration from milliseconds
@@ -77,15 +77,7 @@ module Std.DateTime.Duration {
     FromMilliseconds(ToTotalMilliseconds(d1) - ToTotalMilliseconds(d2))
   }
   function GetSeconds(d: Duration): int { d.seconds }
-  function GetMilliseconds(d: Duration): int { d.milliseconds }
+  function GetMilliseconds(d: Duration): int { d.millis }
 
-  // Formatting
-  function ToString(d: Duration): string
-    requires IsValid(d)
-  {
-    var sign := if ToTotalMilliseconds(d) < 0 then "-" else "";
-    sign +
-    GetSeconds(d).ToString() + "s " +
-    GetMilliseconds(d).ToString() + "ms"
-  }
+
  }
