@@ -71,10 +71,26 @@ module Std.DateTime.LocalDateTime {
     requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
     ensures IsValidLocalDateTime(Minus(dt, duration))
 
+  // Helper functions
+  // Clamp day to valid range when changing year or month
+  function ClampDay(year: int, month: int, desiredDay: int): int
+    requires 1 <= month <= 12
+    requires desiredDay >= 1
+    ensures 1 <= ClampDay(year, month, desiredDay) <= DaysInMonth(year, month)
+    ensures desiredDay <= DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == desiredDay
+    ensures desiredDay >  DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == DaysInMonth(year, month)
+  {
+    if desiredDay <= DaysInMonth(year, month) then desiredDay else DaysInMonth(year, month)
+  }
+
   // Modification functions
   function WithYear(dt: LocalDateTime, newYear: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(WithYear(dt, newYear))
+    ensures IsValidLocalDateTime(WithYear(dt, newYear)) 
+  {
+    var newDay := ClampDay(newYear, dt.month, dt.day);
+    LocalDateTime(newYear, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
 
   function WithMonth(dt: LocalDateTime, newMonth: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 1 <= newMonth <= 12
