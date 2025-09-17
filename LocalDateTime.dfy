@@ -95,26 +95,45 @@ module Std.DateTime.LocalDateTime {
   function WithMonth(dt: LocalDateTime, newMonth: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 1 <= newMonth <= 12
     ensures IsValidLocalDateTime(WithMonth(dt, newMonth))
+  {
+    var newDay := ClampDay(dt.year, newMonth, dt.day);
+    LocalDateTime(dt.year, newMonth, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
 
   function WithDayOfMonth(dt: LocalDateTime, newDay: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 1 <= newDay <= DaysInMonth(dt.year, dt.month)
     ensures IsValidLocalDateTime(WithDayOfMonth(dt, newDay))
+  {
+    LocalDateTime(dt.year, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
 
   function WithHour(dt: LocalDateTime, newHour: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 0 <= newHour < HOURS_PER_DAY
     ensures IsValidLocalDateTime(WithHour(dt, newHour))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
+  }
 
   function WithMinute(dt: LocalDateTime, newMinute: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 0 <= newMinute < MINUTES_PER_HOUR
     ensures IsValidLocalDateTime(WithMinute(dt, newMinute))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
+  }
 
   function WithSecond(dt: LocalDateTime, newSecond: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 0 <= newSecond < SECONDS_PER_MINUTE
     ensures IsValidLocalDateTime(WithSecond(dt, newSecond))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
+  }
 
   function WithMillisecond(dt: LocalDateTime, newMillisecond: int): LocalDateTime
     requires IsValidLocalDateTime(dt) && 0 <= newMillisecond < MILLISECONDS_PER_SECOND
     ensures IsValidLocalDateTime(WithMillisecond(dt, newMillisecond))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
+  }
 
   // Formatting functions
   function ToString(dt: LocalDateTime): string
