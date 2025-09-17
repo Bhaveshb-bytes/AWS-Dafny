@@ -27,6 +27,14 @@ module Std.DateTime.LocalDateTime {
 
   // LocalDateTime validation predicate
   predicate IsValidLocalDateTime(dt: LocalDateTime)
+  {
+    1 <= dt.month <= 12 &&
+    1 <= dt.day <= DaysInMonth(dt.year, dt.month) &&
+    0 <= dt.hour < HOURS_PER_DAY &&
+    0 <= dt.minute < MINUTES_PER_HOUR &&
+    0 <= dt.second < SECONDS_PER_MINUTE &&
+    0 <= dt.millisecond < MILLISECONDS_PER_SECOND
+  }
 
   // Helper functions for date calculations
   function GetDayOfWeek(dt: LocalDateTime): int
@@ -36,11 +44,23 @@ module Std.DateTime.LocalDateTime {
     requires IsValidLocalDateTime(dt)
 
   predicate IsLeapYear(year: int)
+  {
+    (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0)
+  }
 
   function DaysInMonth(year: int, month: int): int
     requires 1 <= month <= 12
+  {
+    if month == 2 then
+      if IsLeapYear(year) then 29 else 28
+    else if month == 4 || month == 6 || month == 9 || month == 11 then 30
+    else 31
+  }
 
   function DaysInYear(year: int): int
+  {
+    if IsLeapYear(year) then 366 else 365
+  }
 
   // LocalDateTime getter functions
   function GetYear(dt: LocalDateTime): int { dt.year }
