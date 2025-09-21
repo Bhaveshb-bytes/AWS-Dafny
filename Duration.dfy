@@ -79,5 +79,53 @@ module Std.DateTime.Duration {
   function GetSeconds(d: Duration): int { d.seconds }
   function GetMilliseconds(d: Duration): int { d.millis }
 
+  // Check if one duration is strictly less than another
+  function Less(d1: Duration, d2: Duration): bool
+    requires IsValid(d1) && IsValid(d2)
+  {
+    ToTotalMilliseconds(d1) < ToTotalMilliseconds(d2)
+  }
+
+  // Maximum of two durations
+  function Max(d1: Duration, d2: Duration): Duration
+    requires IsValid(d1) && IsValid(d2)
+    ensures IsValid(Max(d1, d2))
+  {
+    if Less(d1, d2) then d2 else d1
+  }
+
+  // Minimum of two durations
+  function Min(d1: Duration, d2: Duration): Duration
+    requires IsValid(d1) && IsValid(d2)
+    ensures IsValid(Min(d1, d2))
+  {
+    if Less(d1, d2) then d1 else d2
+  }
+
+  // Maximum of a non-empty sequence of durations
+  function Max(durs: seq<Duration>): Duration
+    requires |durs| > 0
+    requires forall d :: d in durs ==> IsValid(d)
+    ensures IsValid(Max(durs))
+  {
+    if |durs| == 1 then
+      durs[0]
+    else
+      var restMax := Max(durs[1..]);
+      if Less(durs[0], restMax) then restMax else durs[0]
+  }
+
+  // Minimum of a non-empty sequence of durations
+  function Min(durs: seq<Duration>): Duration
+    requires |durs| > 0
+    requires forall d :: d in durs ==> IsValid(d)
+    ensures IsValid(Min(durs))
+  {
+    if |durs| == 1 then
+      durs[0]
+    else
+      var restMin := Min(durs[1..]);
+      if Less(durs[0], restMin) then durs[0] else restMin
+  }
 
  }
