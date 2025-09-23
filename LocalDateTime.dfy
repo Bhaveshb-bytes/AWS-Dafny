@@ -1,9 +1,9 @@
-include "Duration.dfy"
-include "Timezone.dfy"
+// include "Duration.dfy"
+// include "Timezone.dfy"
 
 module Std.DateTime.LocalDateTime {
-  import Duration
-  import Timezone
+  // import Duration
+  // import Timezone
 
   // Result type for operations that can fail
   datatype Result<T, E> = Success(value: T) | Failure(error: E)
@@ -83,13 +83,13 @@ module Std.DateTime.LocalDateTime {
   function Parse(text: string): Result<LocalDateTime, string>
 
   // Arithmetic functions
-  function Plus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
-    ensures IsValidLocalDateTime(Plus(dt, duration))
+  // function Plus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
+  //  requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+  //  ensures IsValidLocalDateTime(Plus(dt, duration))
 
-  function Minus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
-    ensures IsValidLocalDateTime(Minus(dt, duration))
+  //function Minus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
+  //  requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+  //  ensures IsValidLocalDateTime(Minus(dt, duration))
 
   // Helper functions
   // Clamp day to valid range when changing year or month
