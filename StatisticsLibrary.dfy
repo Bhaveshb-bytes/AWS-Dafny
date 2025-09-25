@@ -55,7 +55,7 @@ module StatisticsLibrary {
       requires |s| > 0
       ensures StdDevPopulation(s) >= 0.0
     {
-      sqrt(VariancePopulation(s))
+      sqrt(VariancePopulation(s)) // here I would use the extern library as Robin suggested during the meeting, currently this method is not working but I will update it next time.
     }
 
     // A function to calculate Sample Standard Deviation
@@ -63,7 +63,7 @@ module StatisticsLibrary {
       requires |s| > 1
       ensures StdDevSample(s) >= 0.0
     {
-      sqrt(VarianceSample(s))
+      sqrt(VarianceSample(s)) // here I would use the extern library as Robin suggested during the meeting, currently this method is not working but I will update it next time.
     }
 
 }
