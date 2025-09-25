@@ -49,7 +49,7 @@ module StatisticsLibrary {
       var avg := Mean(s);
       (SumSquaredDifferences(s, avg)) / ((|s| - 1) as real)
     }
-/**
+
      // A function to calculate Population Standard Deviation
     function StdDevPopulation(s: seq<real>): real
       requires |s| > 0
@@ -65,5 +65,5 @@ module StatisticsLibrary {
     {
       sqrt(VarianceSample(s))
     }
-**/
+
 }
