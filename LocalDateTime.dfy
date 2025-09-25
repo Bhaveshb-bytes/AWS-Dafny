@@ -60,6 +60,15 @@ module Std.DateTime.LocalDateTime {
     DTUtils.GetMonthName(month)
   }
 
+  // LocalDateTime getter functions
+  function GetYear(dt: LocalDateTime): int { dt.year }
+  function GetMonth(dt: LocalDateTime): int { dt.month }  
+  function GetDay(dt: LocalDateTime): int { dt.day }
+  function GetHour(dt: LocalDateTime): int { dt.hour }
+  function GetMinute(dt: LocalDateTime): int { dt.minute }
+  function GetSecond(dt: LocalDateTime): int { dt.second }
+  function GetMillisecond(dt: LocalDateTime): int { dt.millisecond }
+
   // Convert time portion to total milliseconds since midnight
   function TimeToMilliseconds(dt: LocalDateTime): int
     requires IsValidLocalDateTime(dt)
@@ -278,6 +287,58 @@ module Std.DateTime.LocalDateTime {
     
     var (newHour, newMinute, newSecond, newMillisecond) := MillisecondsToTime(finalTimeMillis);
     AddDaysToDate(dt.year, dt.month, dt.day, finalDayOffset, newHour, newMinute, newSecond, newMillisecond)
+  }
+
+  // Modification functions
+  function WithYear(dt: LocalDateTime, newYear: int): LocalDateTime
+    requires IsValidLocalDateTime(dt)
+    ensures IsValidLocalDateTime(WithYear(dt, newYear)) 
+  {
+    var newDay := DTUtils.ClampDay(newYear, dt.month, dt.day);
+    LocalDateTime(newYear, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
+
+  function WithMonth(dt: LocalDateTime, newMonth: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 1 <= newMonth <= 12
+    ensures IsValidLocalDateTime(WithMonth(dt, newMonth))
+  {
+    var newDay := DTUtils.ClampDay(dt.year, newMonth, dt.day);
+    LocalDateTime(dt.year, newMonth, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
+
+  function WithDayOfMonth(dt: LocalDateTime, newDay: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 1 <= newDay <= DaysInMonth(dt.year, dt.month)
+    ensures IsValidLocalDateTime(WithDayOfMonth(dt, newDay))
+  {
+    LocalDateTime(dt.year, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+  }
+
+  function WithHour(dt: LocalDateTime, newHour: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 0 <= newHour < DTUtils.HOURS_PER_DAY
+    ensures IsValidLocalDateTime(WithHour(dt, newHour))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
+  }
+
+  function WithMinute(dt: LocalDateTime, newMinute: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 0 <= newMinute < DTUtils.MINUTES_PER_HOUR
+    ensures IsValidLocalDateTime(WithMinute(dt, newMinute))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
+  }
+
+  function WithSecond(dt: LocalDateTime, newSecond: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 0 <= newSecond < DTUtils.SECONDS_PER_MINUTE
+    ensures IsValidLocalDateTime(WithSecond(dt, newSecond))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
+  }
+
+  function WithMillisecond(dt: LocalDateTime, newMillisecond: int): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 0 <= newMillisecond < DTUtils.MILLISECONDS_PER_SECOND
+    ensures IsValidLocalDateTime(WithMillisecond(dt, newMillisecond))
+  {
+    LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
   }
 
   // Formatting functions

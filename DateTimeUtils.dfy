@@ -27,10 +27,10 @@ module DateTimeUtils {
   function DaysInMonth(year: int, month: int): int
     requires 1 <= month <= 12
   {
-    if month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12 then 31
+    if month == 2 then
+      if IsLeapYear(year) then 29 else 28
     else if month == 4 || month == 6 || month == 9 || month == 11 then 30
-    else if IsLeapYear(year) then 29
-    else 28
+    else 31
   }
 
   // Days in year calculation
@@ -140,5 +140,16 @@ module DateTimeUtils {
     else if second < 0 || second >= SECONDS_PER_MINUTE then "Invalid second: " + IntToString(second) + " (must be 0-59)"
     else if millisecond < 0 || millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + IntToString(millisecond) + " (must be 0-999)"
     else "Invalid date/time"
+  }
+
+  // Clamp day to valid range when changing year or month
+  function ClampDay(year: int, month: int, desiredDay: int): int
+    requires 1 <= month <= 12
+    requires desiredDay >= 1
+    ensures 1 <= ClampDay(year, month, desiredDay) <= DaysInMonth(year, month)
+    ensures desiredDay <= DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == desiredDay
+    ensures desiredDay >  DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == DaysInMonth(year, month)
+  {
+    if desiredDay <= DaysInMonth(year, month) then desiredDay else DaysInMonth(year, month)
   }
 }
