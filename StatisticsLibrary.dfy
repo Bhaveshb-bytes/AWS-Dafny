@@ -1,3 +1,5 @@
+//This file contains the implementation of Statistics Library which would help to calculate Sum, Mean, Variance and Standard Deviation.
+
 module StatisticsLibrary {
     // A function to sum the elements of a sequence
     function Sum(s: seq<real>): real
