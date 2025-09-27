@@ -21,7 +21,22 @@ module Std.DateTime.Duration {
     seconds: int,   // 0 <= seconds < 86400
     millis: int     // 0 <= millis < 1000
   )
-  
+
+
+
+ function EpochDifference(epoch1: int, epoch2: int): Duration
+      requires epoch1 >= 0 && epoch2 >= 0
+      ensures IsValid(EpochDifference(epoch1, epoch2))
+    {
+      // absolute difference in milliseconds
+      var diff := if epoch1 >= epoch2 then epoch1 - epoch2 else epoch2 - epoch1;
+
+      // break into seconds and remaining millis
+      var secs  := diff / MILLIS_PER_SECOND;
+      var remMs := diff % MILLIS_PER_SECOND;
+
+      Duration(secs, remMs)
+    }
   predicate IsValid(d: Duration) {
     0 <= d.seconds < SECONDS_PER_MINUTE &&
     0 <= d.millis < MILLISECONDS_PER_SECOND
