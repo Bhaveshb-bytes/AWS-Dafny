@@ -1,4 +1,4 @@
-module Std.DateTime.Duration {
+module Duration {
   const MILLISECONDS_PER_SECOND: int := 1000
   const SECONDS_PER_MINUTE: int := 60
   const MINUTES_PER_HOUR: int := 60

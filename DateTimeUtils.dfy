@@ -1,21 +1,22 @@
 module DateTimeUtils {
+  import opened Std.Strings
   // Core constants used in validation and calculations
   const MILLISECONDS_PER_SECOND: int := 1000
   const SECONDS_PER_MINUTE: int := 60
   const MINUTES_PER_HOUR: int := 60
   const HOURS_PER_DAY: int := 24
-  
+
   // Derived constants for performance
   const MILLISECONDS_PER_MINUTE: int := SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
   const MILLISECONDS_PER_HOUR: int := MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE
   const MILLISECONDS_PER_DAY: int := HOURS_PER_DAY * MILLISECONDS_PER_HOUR
-  
+
   // Month lookup table for cumulative days
   const DAYS_BEFORE_MONTH: seq<int> := [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-  
+
   // Month names for better error messages
-  const MONTH_NAMES: seq<string> := ["January", "February", "March", "April", "May", "June", 
-                                    "July", "August", "September", "October", "November", "December"]
+  const MONTH_NAMES: seq<string> := ["January", "February", "March", "April", "May", "June",
+                                     "July", "August", "September", "October", "November", "December"]
 
   // Leap year calculation
   predicate IsLeapYear(year: int)
@@ -57,6 +58,7 @@ module DateTimeUtils {
     0 <= millisecond < MILLISECONDS_PER_SECOND
   }
 
+
   // Day of week calculation using Sakamoto's algorithm
   function GetDayOfWeek(year: int, month: int, day: int): int
     requires 1 <= month <= 12 && 1 <= day <= DaysInMonth(year, month)
@@ -88,8 +90,8 @@ module DateTimeUtils {
   // Convert total milliseconds back to time components
   function MillisecondsToTime(millis: int): (int, int, int, int)
     requires 0 <= millis < MILLISECONDS_PER_DAY
-    ensures var (h, m, s, ms) := MillisecondsToTime(millis); 
-            0 <= h < HOURS_PER_DAY && 0 <= m < MINUTES_PER_HOUR && 
+    ensures var (h, m, s, ms) := MillisecondsToTime(millis);
+            0 <= h < HOURS_PER_DAY && 0 <= m < MINUTES_PER_HOUR &&
             0 <= s < SECONDS_PER_MINUTE && 0 <= ms < MILLISECONDS_PER_SECOND
   {
     var totalSeconds := millis / MILLISECONDS_PER_SECOND;
@@ -101,44 +103,27 @@ module DateTimeUtils {
     (h, m, s, ms)
   }
 
-  // String conversion utilities
-  function IntToString(value: int): string
-  {
-    if value == 0 then "0"
-    else if value > 0 then IntToStringPositive(value)
-    else "-" + IntToStringPositive(-value)
-  }
-
-  function IntToStringPositive(value: int): string
-    requires value > 0
-    decreases value
-  {
-    if value < 10 then [value as char + '0']
-    else IntToStringPositive(value / 10) + [(value % 10) as char + '0']
-  }
-
   // Helper function for padding numbers with zeros
   function PadWithZeros(value: int, width: int): string
     requires value >= 0
   {
-    if width <= 1 then
-      if value < 10 then [value as char + '0']
-      else IntToString(value)
-    else if value < 10 then
-      "0" + PadWithZeros(value, width - 1)
+    var valueStr := OfInt(value);
+    if |valueStr| >= width then valueStr
     else
-      IntToString(value)
+      var zerosNeeded := width - |valueStr|;
+      var zeros := seq(zerosNeeded, i => '0');
+      zeros + valueStr
   }
-
+  
   // Generate detailed error messages for validation failures
   function GetValidationError(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): string
   {
-    if month < 1 || month > 12 then "Invalid month: " + IntToString(month) + " (must be 1-12)"
-    else if day < 1 || day > DaysInMonth(year, month) then "Invalid day: " + IntToString(day) + " for " + GetMonthName(month) + " " + IntToString(year) + " (max: " + IntToString(DaysInMonth(year, month)) + ")"
-    else if hour < 0 || hour >= HOURS_PER_DAY then "Invalid hour: " + IntToString(hour) + " (must be 0-23)"
-    else if minute < 0 || minute >= MINUTES_PER_HOUR then "Invalid minute: " + IntToString(minute) + " (must be 0-59)"
-    else if second < 0 || second >= SECONDS_PER_MINUTE then "Invalid second: " + IntToString(second) + " (must be 0-59)"
-    else if millisecond < 0 || millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + IntToString(millisecond) + " (must be 0-999)"
+    if month < 1 || month > 12 then "Invalid month: " + OfInt(month) + " (must be 1-12)"
+    else if day < 1 || day > DaysInMonth(year, month) then "Invalid day: " + OfInt(day) + " for " + GetMonthName(month) + " " + OfInt(year) + " (max: " + OfInt(DaysInMonth(year, month)) + ")"
+    else if hour < 0 || hour >= HOURS_PER_DAY then "Invalid hour: " + OfInt(hour) + " (must be 0-23)"
+    else if minute < 0 || minute >= MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute) + " (must be 0-59)"
+    else if second < 0 || second >= SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second) + " (must be 0-59)"
+    else if millisecond < 0 || millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + OfInt(millisecond) + " (must be 0-999)"
     else "Invalid date/time"
   }
 
