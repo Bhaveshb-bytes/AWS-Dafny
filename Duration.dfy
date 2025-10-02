@@ -143,4 +143,80 @@ module Std.DateTime.Duration {
       if Less(durs[0], restMin) then durs[0] else restMin
   }
 
+
+function Scale(d: Duration, factor: int): Duration
+  requires IsValid(d)
+  requires factor >= 0
+  ensures IsValid(Scale(d, factor))
+{
+  FromMilliseconds(ToTotalMilliseconds(d) * factor)
+}
+
+function Divide(d: Duration, divisor: int): Duration
+  requires IsValid(d)
+  requires divisor > 0
+  ensures IsValid(Divide(d, divisor))
+{
+  FromMilliseconds(ToTotalMilliseconds(d) / divisor)
+}
+
+
+function Mod(d1: Duration, d2: Duration): Duration
+  requires IsValid(d1) && IsValid(d2) && ToTotalMilliseconds(d2) > 0
+  ensures IsValid(Mod(d1, d2))
+{
+  FromMilliseconds(ToTotalMilliseconds(d1) % ToTotalMilliseconds(d2))
+}
+
+function ToTotalSeconds(d: Duration): int
+  requires IsValid(d)
+{
+  d.seconds + d.millis / MILLIS_PER_SECOND
+}
+
+function ToTotalMinutes(d: Duration): int
+  requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / MILLIS_PER_MINUTE
+}
+
+function ToTotalHours(d: Duration): int
+  requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / MILLIS_PER_HOUR
+}
+
+function ToTotalDays(d: Duration): int
+  requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / MILLIS_PER_DAY
+}
+
+
+
+function FromSeconds(s: int): Duration
+  ensures IsValid(FromSeconds(s))
+{
+  FromMilliseconds(s * MILLIS_PER_SECOND)
+}
+
+function FromMinutes(m: int): Duration
+  ensures IsValid(FromMinutes(m))
+{
+  FromMilliseconds(m * MILLIS_PER_MINUTE)
+}
+
+function FromHours(h: int): Duration
+  ensures IsValid(FromHours(h))
+{
+  FromMilliseconds(h * MILLIS_PER_HOUR)
+}
+
+function FromDays(d: int): Duration
+  ensures IsValid(FromDays(d))
+{
+  FromMilliseconds(d * MILLIS_PER_DAY)
+}
+
+
  }
