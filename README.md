@@ -1,11 +1,4 @@
 # AWS-Dafny
-Current Design of DateTime API
+Initial Design for Zoned Date Time. (Skeleton)
 
-
-## How to execute the test example
-
-```
-dafny build --target:cs TestLocalDateTime.dfy LocalDateTimeImpl.cs
-
-./TestLocalDateTime
-```
+Using Dafny's {:extern} hook to interface with C#, enable C# to utilize .NET's TimeZoneInfo and DateTimeOffset to handle time zone rules + DST (Unique/Overlap/GAP), and return the "parsed/normalized" results back to Dafny.
