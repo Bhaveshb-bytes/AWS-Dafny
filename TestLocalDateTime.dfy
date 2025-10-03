@@ -9,35 +9,88 @@ module TestLocalDateTime {
 
   method TestOfFunction()
   {
-    // Test valid date - expect success
     var result1 := LDT.Of(2023, 6, 15, 14, 30, 45, 123);
     if result1.Success? {
       var dt1 := result1.value;
-      // If successful, check the values are correct
       assert dt1.year == 2023 && dt1.month == 6 && dt1.day == 15;
       assert dt1.hour == 14 && dt1.minute == 30 && dt1.second == 45 && dt1.millisecond == 123;
+      assert LDT.IsValidLocalDateTime(dt1);
     }
 
-    // Test invalid cases - these should definitely fail
-    var result2 := LDT.Of(2023, 13, 15, 14, 30, 45, 123);  // Invalid month
-    var result3 := LDT.Of(2023, 2, 29, 14, 30, 45, 123);   // Feb 29 in non-leap year
-    var result5 := LDT.Of(2023, 6, 32, 14, 30, 45, 123);   // Invalid day
-    var result6 := LDT.Of(2023, 6, 15, 25, 30, 45, 123);   // Invalid hour
-    var result7 := LDT.Of(2023, 6, 15, 14, 60, 45, 123);   // Invalid minute
+    var leapYearResult := LDT.Of(2020, 2, 29, 0, 0, 0, 0);
+    if leapYearResult.Success? {
+      var leapDt := leapYearResult.value;
+      assert leapDt.year == 2020 && leapDt.month == 2 && leapDt.day == 29;
+      assert LDT.IsValidLocalDateTime(leapDt);
+    }
 
-    // We can't easily assert these are failures due to Dafny limitations,
-    // but the function should return Failure for these cases
+    // Test invalid cases
+    var invalidMonth1 := LDT.Of(2023, 0, 15, 14, 30, 45, 123);   // Month too low
+    var invalidMonth2 := LDT.Of(2023, 13, 15, 14, 30, 45, 123);  // Month too high
+    var invalidDay1 := LDT.Of(2023, 6, 0, 14, 30, 45, 123);     // Day too low
+    var invalidDay2 := LDT.Of(2023, 6, 32, 14, 30, 45, 123);    // Day too high for June
+    var invalidDay3 := LDT.Of(2023, 2, 29, 14, 30, 45, 123);    // Feb 29 in non-leap year
+    var invalidDay4 := LDT.Of(2023, 4, 31, 14, 30, 45, 123);    // April 31st doesn't exist
+    var invalidHour1 := LDT.Of(2023, 6, 15, -1, 30, 45, 123);   // Hour too low
+    var invalidHour2 := LDT.Of(2023, 6, 15, 24, 30, 45, 123);   // Hour too high
+    var invalidMinute1 := LDT.Of(2023, 6, 15, 14, -1, 45, 123); // Minute too low
+    var invalidMinute2 := LDT.Of(2023, 6, 15, 14, 60, 45, 123); // Minute too high
+    var invalidSecond1 := LDT.Of(2023, 6, 15, 14, 30, -1, 123); // Second too low
+    var invalidSecond2 := LDT.Of(2023, 6, 15, 14, 30, 60, 123); // Second too high
+    var invalidMs1 := LDT.Of(2023, 6, 15, 14, 30, 45, -1);      // Millisecond too low
+    var invalidMs2 := LDT.Of(2023, 6, 15, 14, 30, 45, 1000);    // Millisecond too high
+
+    assert invalidMonth1.Failure?;
+    assert invalidMonth2.Failure?;
+    assert invalidDay1.Failure?;
+    assert invalidDay2.Failure?;
+    assert invalidDay3.Failure?;
+    assert invalidDay4.Failure?;
+    assert invalidHour1.Failure?;
+    assert invalidHour2.Failure?;
+    assert invalidMinute1.Failure?;
+    assert invalidMinute2.Failure?;
+    assert invalidSecond1.Failure?;
+    assert invalidSecond2.Failure?;
+    assert invalidMs1.Failure?;
+    assert invalidMs2.Failure?;
   }
 
   method TestParseFunction()
   {
-    // Test parsing - difficult to verify in Dafny due to string parsing complexity
-    var result1 := LDT.Parse("2023-06-15T14:30:45.123");
-    var result2 := LDT.Parse("2023/06/15 14:30:45");     // Invalid format
-    var result3 := LDT.Parse("2023-06-15");             // Too short
+    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123");
+    if validResult1.Success? {
+      var dt1 := validResult1.value;
+      assert LDT.IsValidLocalDateTime(dt1);
+    }
 
-    // These functions exist and can be called, but detailed verification
-    // would require complex string manipulation proofs
+    // Test invalid format cases - these should return Failure
+    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45");     // Wrong separators
+    var invalidFormat2 := LDT.Parse("2023-06-15");              // Too short
+    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45");     // Missing milliseconds
+    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123"); // Wrong date order
+    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123");  // Single digit month
+    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123");  // Single digit day
+    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123");  // Single digit hour
+    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123");  // Single digit minute
+    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123");  // Single digit second
+    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12"); // Wrong millisecond length
+    var invalidFormat11 := LDT.Parse("");                       // Empty string
+    var invalidFormat12 := LDT.Parse("not-a-date");             // Completely invalid
+
+    // Verify format failures
+    assert invalidFormat1.Failure?;
+    assert invalidFormat2.Failure?;
+    assert invalidFormat3.Failure?;
+    assert invalidFormat4.Failure?;
+    assert invalidFormat5.Failure?;
+    assert invalidFormat6.Failure?;
+    assert invalidFormat7.Failure?;
+    assert invalidFormat8.Failure?;
+    assert invalidFormat9.Failure?;
+    assert invalidFormat10.Failure?;
+    assert invalidFormat11.Failure?;
+    assert invalidFormat12.Failure?;
   }
 
   method TestCompareFunction()
@@ -411,7 +464,6 @@ module TestLocalDateTime {
 
 method Main()
 {
-  // Run only the tests that have been converted to use assertions
   TestLocalDateTime.TestOfFunction();
   TestLocalDateTime.TestParseFunction();
   TestLocalDateTime.TestCompareFunction();
