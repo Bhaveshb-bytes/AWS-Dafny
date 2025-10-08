@@ -268,6 +268,54 @@ module LocalDateTime {
       Failure("Failed to get current time components")
   }
 
+  // Helper function to check if a string contains only digits
+  predicate IsDigitString(s: string)
+  {
+    s != [] && forall c <- s :: DecimalConversion.IsDigitChar(c)
+  }
+
+  // Helper function to check if a string is valid for ToInt
+  predicate IsValidForToInt(s: string)
+  {
+    s != "-" && DecimalConversion.IsNumberStr(s, '-')
+  }
+
+  // Lemma: digit-only strings are valid for ToInt
+  lemma DigitStringIsValidForToInt(s: string)
+    requires IsDigitString(s)
+    ensures IsValidForToInt(s)
+  {
+    // First, prove s != "-"
+    assert s != [] by {
+      // IsDigitString requires s != []
+    }
+    assert |s| >= 1;
+    assert s[0] in s;
+    assert DecimalConversion.IsDigitChar(s[0]) by {
+      // From IsDigitString: forall c <- s :: DecimalConversion.IsDigitChar(c)
+    }
+    assert s[0] != '-' by {
+      // '-' is not a digit character
+      assert !DecimalConversion.IsDigitChar('-');
+    }
+    if s == "-" {
+      // This would require |s| == 1 and s[0] == '-'
+      // But we know s[0] != '-', so this is impossible
+      assert false;
+    }
+    assert s != "-";
+
+    // Now prove DecimalConversion.IsNumberStr(s, '-')
+    // IsNumberStr requires: s != [] ==> (s[0] == '-' || s[0] in charToDigit) && forall c <- s[1..] :: IsDigitChar(c)
+    assert s != [];
+    assert DecimalConversion.IsDigitChar(s[0]);
+    assert forall c <- s[1..] :: DecimalConversion.IsDigitChar(c) by {
+      // From IsDigitString: forall c <- s :: DecimalConversion.IsDigitChar(c)
+      // s[1..] is a subset of s
+    }
+    assert DecimalConversion.IsNumberStr(s, '-');
+  }
+
   // Creation functions
   function Of(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): Result<LocalDateTime, string>
   {
@@ -296,15 +344,30 @@ module LocalDateTime {
       var secondStr := text[17..19];
       var millisecondStr := text[20..23];
 
-      var year := ToInt(yearStr);
-      var month := ToInt(monthStr);
-      var day := ToInt(dayStr);
-      var hour := ToInt(hourStr);
-      var minute := ToInt(minuteStr);
-      var second := ToInt(secondStr);
-      var millisecond := ToInt(millisecondStr);
+      // Validate that all parts contain only digits
+      if !IsDigitString(yearStr) || !IsDigitString(monthStr) || !IsDigitString(dayStr) ||
+         !IsDigitString(hourStr) || !IsDigitString(minuteStr) || !IsDigitString(secondStr) ||
+         !IsDigitString(millisecondStr) then
+        Failure("Invalid format: non-digit characters found in date/time components")
+      else
+        // Prove that digit strings are valid for ToInt
+        DigitStringIsValidForToInt(yearStr);
+        DigitStringIsValidForToInt(monthStr);
+        DigitStringIsValidForToInt(dayStr);
+        DigitStringIsValidForToInt(hourStr);
+        DigitStringIsValidForToInt(minuteStr);
+        DigitStringIsValidForToInt(secondStr);
+        DigitStringIsValidForToInt(millisecondStr);
 
-      Of(year, month, day, hour, minute, second, millisecond)
+        var year := ToInt(yearStr);
+        var month := ToInt(monthStr);
+        var day := ToInt(dayStr);
+        var hour := ToInt(hourStr);
+        var minute := ToInt(minuteStr);
+        var second := ToInt(secondStr);
+        var millisecond := ToInt(millisecondStr);
+
+        Of(year, month, day, hour, minute, second, millisecond)
   }
 
   // Formatting functions

@@ -15,6 +15,8 @@ module DateTimeUtils {
   function {:extern "DateTimeImpl", "FromEpochTimeMilliseconds"}
     {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int>
     ensures |FromEpochTimeMillisecondsFunc(epochMillis)| == 7
+    ensures var components := FromEpochTimeMillisecondsFunc(epochMillis);
+            IsValidDateTime(components[0], components[1], components[2], components[3], components[4], components[5], components[6])
 
   // External function for getting current time components
   function {:extern "DateTimeImpl", "GetNowComponents"}
