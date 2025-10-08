@@ -1,11 +1,11 @@
-
+include "DateTimeConstant.dfy"
 module Std.DateTime.Duration {
 
   // -------------------------
   // Duration s
   // -------------------------
   // Core constants
-  import opened DateTimeConstant
+  import DateTimeConstant
   datatype Duration = Duration(
     seconds: int,   // 0 <= seconds < 86400
     millis: int     // 0 <= millis < 1000
@@ -21,21 +21,21 @@ module Std.DateTime.Duration {
       var diff := if epoch1 >= epoch2 then epoch1 - epoch2 else epoch2 - epoch1;
 
       // break into seconds and remaining millis
-      var secs  := diff / MILLISECONDS_PER_SECOND;
-      var remMs := diff % MILLISECONDS_PER_SECOND;
+      var secs  := diff / DateTimeConstant.MILLISECONDS_PER_SECOND;
+      var remMs := diff % DateTimeConstant.MILLISECONDS_PER_SECOND;
 
       Duration(secs, remMs)
     }
   predicate IsValid(d: Duration) {
-    0 <= d.seconds < SECONDS_PER_MINUTE &&
-    0 <= d.millis < MILLISECONDS_PER_SECOND
+    0 <= d.seconds < DateTimeConstant.SECONDS_PER_MINUTE &&
+    0 <= d.millis < DateTimeConstant.MILLISECONDS_PER_SECOND
   }
 
   // Total duration in milliseconds
   function ToTotalMilliseconds(d: Duration): int
     requires IsValid(d)
   {
-    d.seconds * MILLISECONDS_PER_SECOND +
+    d.seconds * DateTimeConstant.MILLISECONDS_PER_SECOND +
     d.millis
   }
 
@@ -44,8 +44,8 @@ module Std.DateTime.Duration {
       ensures IsValid(FromMilliseconds(ms))
     {
 
-      var seconds := ms / MILLISECONDS_PER_SECOND;
-      var milliseconds := ms % MILLISECONDS_PER_SECOND;
+      var seconds := ms / DateTimeConstant.MILLISECONDS_PER_SECOND;
+      var milliseconds := ms % DateTimeConstant.MILLISECONDS_PER_SECOND;
 
       Duration(seconds, milliseconds)
     }
@@ -107,28 +107,28 @@ module Std.DateTime.Duration {
   }
 
   // Maximum of a non-empty sequence of durations
-  function Max(durs: seq<Duration>): Duration
+  function MaxSeq(durs: seq<Duration>): Duration
     requires |durs| > 0
     requires forall d :: d in durs ==> IsValid(d)
-    ensures IsValid(Max(durs))
+    ensures IsValid(MaxSeq(durs))
   {
     if |durs| == 1 then
       durs[0]
     else
-      var restMax := Max(durs[1..]);
+      var restMax := MaxSeq(durs[1..]);
       if Less(durs[0], restMax) then restMax else durs[0]
   }
 
   // Minimum of a non-empty sequence of durations
-  function Min(durs: seq<Duration>): Duration
+  function MinSeq(durs: seq<Duration>): Duration
     requires |durs| > 0
     requires forall d :: d in durs ==> IsValid(d)
-    ensures IsValid(Min(durs))
+    ensures IsValid(MinSeq(durs))
   {
     if |durs| == 1 then
       durs[0]
     else
-      var restMin := Min(durs[1..]);
+      var restMin := MinSeq(durs[1..]);
       if Less(durs[0], restMin) then durs[0] else restMin
   }
 
@@ -160,25 +160,25 @@ function Mod(d1: Duration, d2: Duration): Duration
 function ToTotalSeconds(d: Duration): int
   requires IsValid(d)
 {
-  d.seconds + d.millis / MILLISECONDS_PER_SECOND
+  d.seconds + d.millis / DateTimeConstant.MILLISECONDS_PER_SECOND
 }
 
 function ToTotalMinutes(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_MINUTE
+  ToTotalMilliseconds(d) / DateTimeConstant.MILLISECONDS_PER_MINUTE
 }
 
 function ToTotalHours(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_HOUR
+  ToTotalMilliseconds(d) / DateTimeConstant.MILLISECONDS_PER_HOUR
 }
 
 function ToTotalDays(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_DAY
+  ToTotalMilliseconds(d) / DateTimeConstant.MILLISECONDS_PER_DAY
 }
 
 
@@ -186,25 +186,25 @@ function ToTotalDays(d: Duration): int
 function FromSeconds(s: int): Duration
   ensures IsValid(FromSeconds(s))
 {
-  FromMilliseconds(s * MILLISECONDS_PER_SECOND)
+  FromMilliseconds(s * DateTimeConstant.MILLISECONDS_PER_SECOND)
 }
 
 function FromMinutes(m: int): Duration
   ensures IsValid(FromMinutes(m))
 {
-  FromMilliseconds(m *  MILLISECONDS_PER_MINUTE)
+  FromMilliseconds(m *  DateTimeConstant.MILLISECONDS_PER_MINUTE)
 }
 
 function FromHours(h: int): Duration
   ensures IsValid(FromHours(h))
 {
-  FromMilliseconds(h * MILLISECONDS_PER_HOUR)
+  FromMilliseconds(h * DateTimeConstant.MILLISECONDS_PER_HOUR)
 }
 
 function FromDays(d: int): Duration
   ensures IsValid(FromDays(d))
 {
-  FromMilliseconds(d * MILLISECONDS_PER_DAY)
+  FromMilliseconds(d * DateTimeConstant.MILLISECONDS_PER_DAY)
 }
 
 

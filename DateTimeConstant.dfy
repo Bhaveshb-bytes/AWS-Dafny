@@ -1,0 +1,11 @@
+module DateTimeConstant {
+  const MILLISECONDS_PER_SECOND: int := 1000
+  const SECONDS_PER_MINUTE: int := 60
+  const MINUTES_PER_HOUR: int := 60
+  const HOURS_PER_DAY: int := 24
+
+  // Derived constants for performance
+  const MILLISECONDS_PER_MINUTE: int := SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
+  const MILLISECONDS_PER_HOUR: int := MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE
+  const MILLISECONDS_PER_DAY: int := HOURS_PER_DAY * MILLISECONDS_PER_HOUR
+}
