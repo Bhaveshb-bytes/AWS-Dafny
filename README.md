@@ -1,7 +1,11 @@
 # AWS-Dafny
 Current Design of DateTime API
 
-In the current version, the calculation logic has changed. The new logic first converts the LocalDateTime to an epoch time in milliseconds. It also converts the time to be added or subtracted into milliseconds. Then, it performs the addition or subtraction. Finally, it converts the resulting millisecond time back to a LocalDateTime.
+Regarding the "absence of leap years every 4000 years," I checked how major programming languages determine leap years and found that none of them use the 4000-year rule. I think we can ignore this very rare rule.
+
+The date calculation logic is now based on epoch time, so we have already avoided a lot of unnecessarily complex date-handling logic.
+
+The new logic first converts the LocalDateTime to an epoch time in milliseconds. It also converts the time to be added or subtracted into milliseconds. Then, it performs the addition or subtraction. Finally, it converts the resulting millisecond time back to a LocalDateTime.
 
 Because converting LocalDateTime to epoch time and back requires external functions, we cannot be certain about the correctness of the post-conditions of these external dependencies. Therefore, we cannot use assert to test the code. For now, we are using a print-based method for testing.
 
