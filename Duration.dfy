@@ -1,22 +1,11 @@
 
-
 module Std.DateTime.Duration {
 
   // -------------------------
   // Duration s
   // -------------------------
   // Core constants
-  const MILLISECONDS_PER_SECOND: int := 1000
-  const SECONDS_PER_MINUTE: int := 60
-  const MINUTES_PER_HOUR: int := 60
-  const HOURS_PER_DAY: int := 24
-
-  const MILLIS_PER_SECOND: int := 1000
-  const MILLIS_PER_MINUTE: int := 60 * MILLIS_PER_SECOND
-  const MILLIS_PER_HOUR: int := 60 * MILLIS_PER_MINUTE
-  const MILLIS_PER_DAY: int := 24 * MILLIS_PER_HOUR
-
-
+  import opened DateTimeConstant
   datatype Duration = Duration(
     seconds: int,   // 0 <= seconds < 86400
     millis: int     // 0 <= millis < 1000
@@ -32,8 +21,8 @@ module Std.DateTime.Duration {
       var diff := if epoch1 >= epoch2 then epoch1 - epoch2 else epoch2 - epoch1;
 
       // break into seconds and remaining millis
-      var secs  := diff / MILLIS_PER_SECOND;
-      var remMs := diff % MILLIS_PER_SECOND;
+      var secs  := diff / MILLISECONDS_PER_SECOND;
+      var remMs := diff % MILLISECONDS_PER_SECOND;
 
       Duration(secs, remMs)
     }
@@ -46,7 +35,7 @@ module Std.DateTime.Duration {
   function ToTotalMilliseconds(d: Duration): int
     requires IsValid(d)
   {
-    d.seconds * MILLIS_PER_SECOND +
+    d.seconds * MILLISECONDS_PER_SECOND +
     d.millis
   }
 
@@ -55,8 +44,8 @@ module Std.DateTime.Duration {
       ensures IsValid(FromMilliseconds(ms))
     {
 
-      var seconds := ms / MILLIS_PER_SECOND;
-      var milliseconds := ms % MILLIS_PER_SECOND;
+      var seconds := ms / MILLISECONDS_PER_SECOND;
+      var milliseconds := ms % MILLISECONDS_PER_SECOND;
 
       Duration(seconds, milliseconds)
     }
@@ -171,25 +160,25 @@ function Mod(d1: Duration, d2: Duration): Duration
 function ToTotalSeconds(d: Duration): int
   requires IsValid(d)
 {
-  d.seconds + d.millis / MILLIS_PER_SECOND
+  d.seconds + d.millis / MILLISECONDS_PER_SECOND
 }
 
 function ToTotalMinutes(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLIS_PER_MINUTE
+  ToTotalMilliseconds(d) / MILLISECONDS_PER_MINUTE
 }
 
 function ToTotalHours(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLIS_PER_HOUR
+  ToTotalMilliseconds(d) / MILLISECONDS_PER_HOUR
 }
 
 function ToTotalDays(d: Duration): int
   requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLIS_PER_DAY
+  ToTotalMilliseconds(d) / MILLISECONDS_PER_DAY
 }
 
 
@@ -197,25 +186,25 @@ function ToTotalDays(d: Duration): int
 function FromSeconds(s: int): Duration
   ensures IsValid(FromSeconds(s))
 {
-  FromMilliseconds(s * MILLIS_PER_SECOND)
+  FromMilliseconds(s * MILLISECONDS_PER_SECOND)
 }
 
 function FromMinutes(m: int): Duration
   ensures IsValid(FromMinutes(m))
 {
-  FromMilliseconds(m * MILLIS_PER_MINUTE)
+  FromMilliseconds(m *  MILLISECONDS_PER_MINUTE)
 }
 
 function FromHours(h: int): Duration
   ensures IsValid(FromHours(h))
 {
-  FromMilliseconds(h * MILLIS_PER_HOUR)
+  FromMilliseconds(h * MILLISECONDS_PER_HOUR)
 }
 
 function FromDays(d: int): Duration
   ensures IsValid(FromDays(d))
 {
-  FromMilliseconds(d * MILLIS_PER_DAY)
+  FromMilliseconds(d * MILLISECONDS_PER_DAY)
 }
 
 
