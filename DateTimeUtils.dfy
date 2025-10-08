@@ -1,15 +1,8 @@
+include "DateTimeConstant.dfy"
+
 module DateTimeUtils {
   import opened Std.Strings
-  // Core constants used in validation and calculations
-  const MILLISECONDS_PER_SECOND: int := 1000
-  const SECONDS_PER_MINUTE: int := 60
-  const MINUTES_PER_HOUR: int := 60
-  const HOURS_PER_DAY: int := 24
-
-  // Derived constants for performance
-  const MILLISECONDS_PER_MINUTE: int := SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
-  const MILLISECONDS_PER_HOUR: int := MINUTES_PER_HOUR * MILLISECONDS_PER_MINUTE
-  const MILLISECONDS_PER_DAY: int := HOURS_PER_DAY * MILLISECONDS_PER_HOUR
+  import DateTimeConstant
 
   // Month lookup table for cumulative days
   const DAYS_BEFORE_MONTH: seq<int> := [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
@@ -52,10 +45,10 @@ module DateTimeUtils {
   {
     1 <= month <= 12 &&
     1 <= day <= DaysInMonth(year, month) &&
-    0 <= hour < HOURS_PER_DAY &&
-    0 <= minute < MINUTES_PER_HOUR &&
-    0 <= second < SECONDS_PER_MINUTE &&
-    0 <= millisecond < MILLISECONDS_PER_SECOND
+    0 <= hour < DateTimeConstant.HOURS_PER_DAY &&
+    0 <= minute < DateTimeConstant.MINUTES_PER_HOUR &&
+    0 <= second < DateTimeConstant.SECONDS_PER_MINUTE &&
+    0 <= millisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
   }
 
 
@@ -80,26 +73,26 @@ module DateTimeUtils {
 
   // Convert time portion to total milliseconds since midnight
   function TimeToMilliseconds(hour: int, minute: int, second: int, millisecond: int): int
-    requires 0 <= hour < HOURS_PER_DAY && 0 <= minute < MINUTES_PER_HOUR
-    requires 0 <= second < SECONDS_PER_MINUTE && 0 <= millisecond < MILLISECONDS_PER_SECOND
-    ensures 0 <= TimeToMilliseconds(hour, minute, second, millisecond) < MILLISECONDS_PER_DAY
+    requires 0 <= hour < DateTimeConstant.HOURS_PER_DAY && 0 <= minute < DateTimeConstant.MINUTES_PER_HOUR
+    requires 0 <= second < DateTimeConstant.SECONDS_PER_MINUTE && 0 <= millisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
+    ensures 0 <= TimeToMilliseconds(hour, minute, second, millisecond) < DateTimeConstant.MILLISECONDS_PER_DAY
   {
-    ((hour * MINUTES_PER_HOUR + minute) * SECONDS_PER_MINUTE + second) * MILLISECONDS_PER_SECOND + millisecond
+    ((hour * DateTimeConstant.MINUTES_PER_HOUR + minute) * DateTimeConstant.SECONDS_PER_MINUTE + second) * DateTimeConstant.MILLISECONDS_PER_SECOND + millisecond
   }
 
   // Convert total milliseconds back to time components
   function MillisecondsToTime(millis: int): (int, int, int, int)
-    requires 0 <= millis < MILLISECONDS_PER_DAY
+    requires 0 <= millis < DateTimeConstant.MILLISECONDS_PER_DAY
     ensures var (h, m, s, ms) := MillisecondsToTime(millis);
-            0 <= h < HOURS_PER_DAY && 0 <= m < MINUTES_PER_HOUR &&
-            0 <= s < SECONDS_PER_MINUTE && 0 <= ms < MILLISECONDS_PER_SECOND
+            0 <= h < DateTimeConstant.HOURS_PER_DAY && 0 <= m < DateTimeConstant.MINUTES_PER_HOUR &&
+            0 <= s < DateTimeConstant.SECONDS_PER_MINUTE && 0 <= ms < DateTimeConstant.MILLISECONDS_PER_SECOND
   {
-    var totalSeconds := millis / MILLISECONDS_PER_SECOND;
-    var ms := millis % MILLISECONDS_PER_SECOND;
-    var totalMinutes := totalSeconds / SECONDS_PER_MINUTE;
-    var s := totalSeconds % SECONDS_PER_MINUTE;
-    var h := totalMinutes / MINUTES_PER_HOUR;
-    var m := totalMinutes % MINUTES_PER_HOUR;
+    var totalSeconds := millis / DateTimeConstant.MILLISECONDS_PER_SECOND;
+    var ms := millis % DateTimeConstant.MILLISECONDS_PER_SECOND;
+    var totalMinutes := totalSeconds / DateTimeConstant.SECONDS_PER_MINUTE;
+    var s := totalSeconds % DateTimeConstant.SECONDS_PER_MINUTE;
+    var h := totalMinutes / DateTimeConstant.MINUTES_PER_HOUR;
+    var m := totalMinutes % DateTimeConstant.MINUTES_PER_HOUR;
     (h, m, s, ms)
   }
 
@@ -120,10 +113,10 @@ module DateTimeUtils {
   {
     if month < 1 || month > 12 then "Invalid month: " + OfInt(month) + " (must be 1-12)"
     else if day < 1 || day > DaysInMonth(year, month) then "Invalid day: " + OfInt(day) + " for " + GetMonthName(month) + " " + OfInt(year) + " (max: " + OfInt(DaysInMonth(year, month)) + ")"
-    else if hour < 0 || hour >= HOURS_PER_DAY then "Invalid hour: " + OfInt(hour) + " (must be 0-23)"
-    else if minute < 0 || minute >= MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute) + " (must be 0-59)"
-    else if second < 0 || second >= SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second) + " (must be 0-59)"
-    else if millisecond < 0 || millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + OfInt(millisecond) + " (must be 0-999)"
+    else if hour < 0 || hour >= DateTimeConstant.HOURS_PER_DAY then "Invalid hour: " + OfInt(hour) + " (must be 0-23)"
+    else if minute < 0 || minute >= DateTimeConstant.MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute) + " (must be 0-59)"
+    else if second < 0 || second >= DateTimeConstant.SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second) + " (must be 0-59)"
+    else if millisecond < 0 || millisecond >= DateTimeConstant.MILLISECONDS_PER_SECOND then "Invalid millisecond: " + OfInt(millisecond) + " (must be 0-999)"
     else "Invalid date/time"
   }
 
