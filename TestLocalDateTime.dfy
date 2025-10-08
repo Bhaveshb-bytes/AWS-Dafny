@@ -113,22 +113,23 @@ module TestLocalDateTime {
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
     var duration := Duration.Duration(3661, 500); // 1 hour, 1 minute, 1 second, 500ms
 
-    var plusResult := LDT.Plus(dt, duration);
+    var plusResult := LDT.PlusDuration(dt, duration);
+    print("Plus Result: " + LDT.ToString(plusResult));
     assert LDT.GetHour(plusResult) == 15;  // Should be one hour later
     assert LDT.GetMinute(plusResult) == 31; // Should be one minute later
     assert LDT.GetSecond(plusResult) == 46; // Should be one second later
     assert LDT.GetMillisecond(plusResult) == 623; // Should be 500ms later
 
-    var minusResult := LDT.Minus(dt, duration);
+    var minusResult := LDT.MinusDuration(dt, duration);
     assert LDT.GetHour(minusResult) == 13;  // Should be one hour earlier
     assert LDT.GetMinute(minusResult) == 29; // Should be one minute earlier
-    assert LDT.GetSecond(minusResult) == 43; // Should be one second earlier
+    assert LDT.GetSecond(minusResult) == 43;
     assert LDT.GetMillisecond(minusResult) == 623; // 123 - 500 + 1000 = 623
 
     // Test cross-day boundary
     var lateNight := LDT.LocalDateTime(2023, 6, 15, 23, 30, 45, 123);
     var longDuration := Duration.Duration(7200, 0); // 2 hours
-    var nextDay := LDT.Plus(lateNight, longDuration);
+    var nextDay := LDT.PlusDuration(lateNight, longDuration);
     assert LDT.GetDay(nextDay) == 16;  // Should be next day
     assert LDT.GetHour(nextDay) == 1;  // Should be 1:30 AM
     assert LDT.GetMinute(nextDay) == 30;
@@ -281,6 +282,24 @@ module TestLocalDateTime {
     assert plusOneMonth.year == 2023;
     assert plusOneMonth.month == 2;
     assert plusOneMonth.day == 28; // Clamped from 31 to 28 (Feb)
+
+    // Test leap year Feb 29 plus one month
+    var feb29 := LDT.LocalDateTime(2020, 2, 29, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(feb29);
+    var feb29PlusOne := LDT.PlusMonths(feb29, 1);
+    assert LDT.IsValidLocalDateTime(feb29PlusOne);
+    assert feb29PlusOne.year == 2020;
+    assert feb29PlusOne.month == 3;
+    assert feb29PlusOne.day == 29;
+
+    // Test Jan 31 plus one month in non-leap year
+    var jan31NonLeap := LDT.LocalDateTime(2023, 1, 31, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(jan31NonLeap);
+    var jan31PlusOne := LDT.PlusMonths(jan31NonLeap, 1);
+    assert LDT.IsValidLocalDateTime(jan31PlusOne);
+    assert jan31PlusOne.year == 2023;
+    assert jan31PlusOne.month == 2;
+    assert jan31PlusOne.day == 28; // Clamped from 31 to 28 (Feb)
   }
 
   method TestPlusDays() {

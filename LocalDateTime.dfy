@@ -91,11 +91,24 @@ module LocalDateTime {
   }
 
   // Plus methods
+  // Epoch-based date time arithmetic
+  function Plus(dt: LocalDateTime, millisToAdd: int): LocalDateTime
+    requires IsValidLocalDateTime(dt)
+    ensures IsValidLocalDateTime(Plus(dt, millisToAdd))
+  {
+    var epochMillis := DTUtils.ToEpochTimeMillisecondsFunc(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millisecond);
+    var newEpochMillis := epochMillis + millisToAdd;
+    var components := DTUtils.FromEpochTimeMillisecondsFunc(newEpochMillis);
+    LocalDateTime(components[0], components[1], components[2], components[3], components[4], components[5], components[6])
+  }
+
   function PlusYears(dt: LocalDateTime, years: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusYears(dt, years))
   {
-    WithYear(dt, dt.year + years)
+    var newYear := dt.year + years;
+    var validDay := DTUtils.ClampDay(newYear, dt.month, dt.day);
+    LocalDateTime(newYear, dt.month, validDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
   function PlusMonths(dt: LocalDateTime, months: int): LocalDateTime
@@ -105,51 +118,43 @@ module LocalDateTime {
     var totalMonths := dt.month + months;
     var newYear := dt.year + (totalMonths - 1) / 12;
     var newMonth := ((totalMonths - 1) % 12) + 1;
-    var clampedDay := DTUtils.ClampDay(newYear, newMonth, dt.day);
-    LocalDateTime(newYear, newMonth, clampedDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+    var validDay := DTUtils.ClampDay(newYear, newMonth, dt.day);
+    LocalDateTime(newYear, newMonth, validDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
   function PlusDays(dt: LocalDateTime, days: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusDays(dt, days))
   {
-    if days == 0 then dt
-    else if days > 0 then
-      AddPositiveDays(dt.year, dt.month, dt.day, days, dt.hour, dt.minute, dt.second, dt.millisecond)
-    else
-      SubtractPositiveDays(dt.year, dt.month, dt.day, -days, dt.hour, dt.minute, dt.second, dt.millisecond)
+    Plus(dt, days * DateTimeConstant.MILLISECONDS_PER_DAY)
   }
 
   function PlusHours(dt: LocalDateTime, hours: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusHours(dt, hours))
   {
-    var duration := Duration.Duration(hours * DateTimeConstant.SECONDS_PER_MINUTE * DateTimeConstant.MINUTES_PER_HOUR, 0);
-    Plus(dt, duration)
+    Plus(dt, hours * DateTimeConstant.MILLISECONDS_PER_HOUR)
   }
 
   function PlusMinutes(dt: LocalDateTime, minutes: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusMinutes(dt, minutes))
   {
-    var duration := Duration.Duration(minutes * DateTimeConstant.SECONDS_PER_MINUTE, 0);
-    Plus(dt, duration)
+    Plus(dt, minutes * DateTimeConstant.MILLISECONDS_PER_MINUTE)
   }
 
   function PlusSeconds(dt: LocalDateTime, seconds: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusSeconds(dt, seconds))
   {
-    var duration := Duration.Duration(seconds, 0);
-    Plus(dt, duration)
+    Plus(dt, seconds * DateTimeConstant.MILLISECONDS_PER_SECOND)
   }
 
-  function PlusMilliseconds(dt: LocalDateTime, millis: int): LocalDateTime
+  function PlusMilliseconds(dt: LocalDateTime, milliseconds: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(PlusMilliseconds(dt, millis))
+    ensures IsValidLocalDateTime(PlusMilliseconds(dt, milliseconds))
   {
-    var duration := Duration.Duration(0, millis);
-    Plus(dt, duration)
+    Plus(dt, milliseconds)
   }
 
   // Minus methods
@@ -195,11 +200,28 @@ module LocalDateTime {
     PlusSeconds(dt, -seconds)
   }
 
-  function MinusMilliseconds(dt: LocalDateTime, millis: int): LocalDateTime
+  function MinusMilliseconds(dt: LocalDateTime, milliseconds: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(MinusMilliseconds(dt, millis))
+    ensures IsValidLocalDateTime(MinusMilliseconds(dt, milliseconds))
   {
-    PlusMilliseconds(dt, -millis)
+    PlusMilliseconds(dt, -milliseconds)
+  }
+
+  // Arithmetic functions with Duration
+  function PlusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
+    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+    ensures IsValidLocalDateTime(PlusDuration(dt, duration))
+  {
+    var totalMillis := duration.seconds * DateTimeConstant.MILLISECONDS_PER_SECOND + duration.millis;
+    Plus(dt, totalMillis)
+  }
+
+  function MinusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
+    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+    ensures IsValidLocalDateTime(MinusDuration(dt, duration))
+  {
+    var totalMillis := duration.seconds * DateTimeConstant.MILLISECONDS_PER_SECOND + duration.millis;
+    Plus(dt, -totalMillis)
   }
 
   // LocalDateTime comparison function
@@ -224,17 +246,12 @@ module LocalDateTime {
       0
   }
 
-  // External method for getting current time components
-  method {:extern "LocalDateTimeImpl", "NowComponents"}
-    {:axiom} NowComponentsImpl() returns (components: seq<char>)
-    ensures |components| == 7
-
-  // Now method which returns current local date time
-  method Now() returns (result: Result<LocalDateTime, string>)
-    ensures result.Success? ==> IsValidLocalDateTime(result.value)
+  // Now function which returns current local date time
+  function Now(): Result<LocalDateTime, string>
+    ensures Now().Success? ==> IsValidLocalDateTime(Now().value)
   {
-    var components := NowComponentsImpl();
-    if |components| == 7 {
+    var components := DTUtils.GetNowComponentsFunc();
+    if |components| == 7 then
       var year := components[0] as int;
       var month := components[1] as int;
       var day := components[2] as int;
@@ -244,14 +261,12 @@ module LocalDateTime {
       var millisecond := components[6] as int;
 
       var dt := LocalDateTime(year, month, day, hour, minute, second, millisecond);
-      if IsValidLocalDateTime(dt) {
-        result := Success(dt);
-      } else {
-        result := Failure("Current time components are invalid");
-      }
-    } else {
-      result := Failure("Failed to get current time components");
-    }
+      if IsValidLocalDateTime(dt) then
+        Success(dt)
+      else
+        Failure("Current time components are invalid")
+    else
+      Failure("Failed to get current time components")
   }
 
   // Creation functions
@@ -292,103 +307,6 @@ module LocalDateTime {
 
       Of(year, month, day, hour, minute, second, millisecond)
   }
-
-
-  // Arithmetic functions
-  function Plus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
-    ensures IsValidLocalDateTime(Plus(dt, duration))
-  {
-    AddDuration(dt, duration.seconds, duration.millis)
-  }
-
-  function Minus(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
-    ensures IsValidLocalDateTime(Minus(dt, duration))
-  {
-    AddDuration(dt, -duration.seconds, -duration.millis)
-  }
-
-  function AddDuration(dt: LocalDateTime, seconds: int, millis: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(AddDuration(dt, seconds, millis))
-  {
-    var totalMillis := seconds * DateTimeConstant.MILLISECONDS_PER_SECOND + millis;
-    var currentTimeMillis := DTUtils.TimeToMilliseconds(dt.hour, dt.minute, dt.second, dt.millisecond);
-    var newTotalMillis := currentTimeMillis + totalMillis;
-
-    var dayOffset := newTotalMillis / DateTimeConstant.MILLISECONDS_PER_DAY;
-    var timeMillis := newTotalMillis % DateTimeConstant.MILLISECONDS_PER_DAY;
-
-    var (finalDayOffset, finalTimeMillis) :=
-      if timeMillis < 0 then (dayOffset - 1, timeMillis + DateTimeConstant.MILLISECONDS_PER_DAY)
-      else (dayOffset, timeMillis);
-
-    var (hour, minute, second, millisecond) := DTUtils.MillisecondsToTime(finalTimeMillis);
-    AddDays(dt, finalDayOffset, hour, minute, second, millisecond)
-  }
-
-  function AddDays(dt: LocalDateTime, days: int, hour: int, minute: int, second: int, millisecond: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    requires 0 <= hour < DateTimeConstant.HOURS_PER_DAY && 0 <= minute < DateTimeConstant.MINUTES_PER_HOUR
-    requires 0 <= second < DateTimeConstant.SECONDS_PER_MINUTE && 0 <= millisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
-    ensures IsValidLocalDateTime(AddDays(dt, days, hour, minute, second, millisecond))
-  {
-    if days == 0 then
-      LocalDateTime(dt.year, dt.month, dt.day, hour, minute, second, millisecond)
-    else if days > 0 then
-      AddPositiveDays(dt.year, dt.month, dt.day, days, hour, minute, second, millisecond)
-    else
-      SubtractPositiveDays(dt.year, dt.month, dt.day, -days, hour, minute, second, millisecond)
-  }
-
-  function AddPositiveDays(year: int, month: int, day: int, days: int, hour: int, minute: int, second: int, millisecond: int): LocalDateTime
-    requires days > 0 && 1 <= month <= 12 && 1 <= day <= DTUtils.DaysInMonth(year, month)
-    requires 0 <= hour < DateTimeConstant.HOURS_PER_DAY && 0 <= minute < DateTimeConstant.MINUTES_PER_HOUR
-    requires 0 <= second < DateTimeConstant.SECONDS_PER_MINUTE && 0 <= millisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
-    ensures IsValidLocalDateTime(AddPositiveDays(year, month, day, days, hour, minute, second, millisecond))
-    decreases days
-  {
-    var daysInMonth := DTUtils.DaysInMonth(year, month);
-    if day + days <= daysInMonth then
-      LocalDateTime(year, month, day + days, hour, minute, second, millisecond)
-    else
-      // Calculate days to reach end of current month
-      var daysToEndOfMonth := daysInMonth - day + 1;
-      var remainingDays := days - daysToEndOfMonth;
-
-      // Move to first day of next month
-      var (nextYear, nextMonth) := if month == 12 then (year + 1, 1) else (year, month + 1);
-
-      if remainingDays == 0 then
-        LocalDateTime(nextYear, nextMonth, 1, hour, minute, second, millisecond)
-      else
-        AddPositiveDays(nextYear, nextMonth, 1, remainingDays, hour, minute, second, millisecond)
-  }
-
-  function SubtractPositiveDays(year: int, month: int, day: int, days: int, hour: int, minute: int, second: int, millisecond: int): LocalDateTime
-    requires days > 0 && 1 <= month <= 12 && 1 <= day <= DTUtils.DaysInMonth(year, month)
-    requires 0 <= hour < DateTimeConstant.HOURS_PER_DAY && 0 <= minute < DateTimeConstant.MINUTES_PER_HOUR
-    requires 0 <= second < DateTimeConstant.SECONDS_PER_MINUTE && 0 <= millisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
-    ensures IsValidLocalDateTime(SubtractPositiveDays(year, month, day, days, hour, minute, second, millisecond))
-    decreases days
-  {
-    if day > days then
-      LocalDateTime(year, month, day - days, hour, minute, second, millisecond)
-    else
-      // Calculate remaining days after going to previous month
-      var remainingDays := days - day;
-
-      // Move to previous month
-      var (prevYear, prevMonth) := if month == 1 then (year - 1, 12) else (year, month - 1);
-      var daysInPrevMonth := DTUtils.DaysInMonth(prevYear, prevMonth);
-
-      if remainingDays == 0 then
-        LocalDateTime(prevYear, prevMonth, daysInPrevMonth, hour, minute, second, millisecond)
-      else
-        SubtractPositiveDays(prevYear, prevMonth, daysInPrevMonth, remainingDays, hour, minute, second, millisecond)
-  }
-
 
   // Formatting functions
   function ToString(dt: LocalDateTime): string

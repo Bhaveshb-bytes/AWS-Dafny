@@ -4,12 +4,22 @@ module DateTimeUtils {
   import opened Std.Strings
   import DateTimeConstant
 
-  // Month lookup table for cumulative days
-  const DAYS_BEFORE_MONTH: seq<int> := [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-
   // Month names for better error messages
   const MONTH_NAMES: seq<string> := ["January", "February", "March", "April", "May", "June",
                                      "July", "August", "September", "October", "November", "December"]
+
+  // Function versions for use in function contexts
+  function {:extern "DateTimeImpl", "ToEpochTimeMilliseconds"}
+    {:axiom} ToEpochTimeMillisecondsFunc(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): int
+
+  function {:extern "DateTimeImpl", "FromEpochTimeMilliseconds"}
+    {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int>
+    ensures |FromEpochTimeMillisecondsFunc(epochMillis)| == 7
+
+  // External function for getting current time components
+  function {:extern "DateTimeImpl", "GetNowComponents"}
+    {:axiom} GetNowComponentsFunc(): seq<char>
+    ensures |GetNowComponentsFunc()| == 7
 
   // Leap year calculation
   predicate IsLeapYear(year: int)
@@ -62,15 +72,6 @@ module DateTimeUtils {
     (y + y/4 - y/100 + y/400 + t[month-1] + day) % 7
   }
 
-  // Day of year calculation using optimized lookup
-  function GetDayOfYear(year: int, month: int, day: int): int
-    requires 1 <= month <= 12 && 1 <= day <= DaysInMonth(year, month)
-  {
-    var daysFromPreviousMonths := DAYS_BEFORE_MONTH[month - 1];
-    var leapDayAdjustment := if IsLeapYear(year) && month > 2 then 1 else 0;
-    daysFromPreviousMonths + leapDayAdjustment + day
-  }
-
   // Convert time portion to total milliseconds since midnight
   function TimeToMilliseconds(hour: int, minute: int, second: int, millisecond: int): int
     requires 0 <= hour < DateTimeConstant.HOURS_PER_DAY && 0 <= minute < DateTimeConstant.MINUTES_PER_HOUR
@@ -107,7 +108,7 @@ module DateTimeUtils {
       var zeros := seq(zerosNeeded, i => '0');
       zeros + valueStr
   }
-  
+
   // Generate detailed error messages for validation failures
   function GetValidationError(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): string
   {
