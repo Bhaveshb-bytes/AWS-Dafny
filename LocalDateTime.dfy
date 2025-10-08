@@ -4,10 +4,9 @@ include "DateTimeConstant.dfy"
 
 module LocalDateTime {
   import opened Std.Strings
+  import opened DateTimeConstant
   import Duration
   import DTUtils = DateTimeUtils
-  import DateTimeConstant
-
 
   // Result type for operations that can fail
   datatype Result<T, E> = Success(value: T) | Failure(error: E)
@@ -63,28 +62,28 @@ module LocalDateTime {
   }
 
   function WithHour(dt: LocalDateTime, newHour: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newHour < DateTimeConstant.HOURS_PER_DAY
+    requires IsValidLocalDateTime(dt) && 0 <= newHour < HOURS_PER_DAY
     ensures IsValidLocalDateTime(WithHour(dt, newHour))
   {
     LocalDateTime(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
   }
 
   function WithMinute(dt: LocalDateTime, newMinute: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newMinute < DateTimeConstant.MINUTES_PER_HOUR
+    requires IsValidLocalDateTime(dt) && 0 <= newMinute < MINUTES_PER_HOUR
     ensures IsValidLocalDateTime(WithMinute(dt, newMinute))
   {
     LocalDateTime(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
   }
 
   function WithSecond(dt: LocalDateTime, newSecond: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newSecond < DateTimeConstant.SECONDS_PER_MINUTE
+    requires IsValidLocalDateTime(dt) && 0 <= newSecond < SECONDS_PER_MINUTE
     ensures IsValidLocalDateTime(WithSecond(dt, newSecond))
   {
     LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
   }
 
   function WithMillisecond(dt: LocalDateTime, newMillisecond: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newMillisecond < DateTimeConstant.MILLISECONDS_PER_SECOND
+    requires IsValidLocalDateTime(dt) && 0 <= newMillisecond < MILLISECONDS_PER_SECOND
     ensures IsValidLocalDateTime(WithMillisecond(dt, newMillisecond))
   {
     LocalDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
@@ -126,28 +125,28 @@ module LocalDateTime {
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusDays(dt, days))
   {
-    Plus(dt, days * DateTimeConstant.MILLISECONDS_PER_DAY)
+    Plus(dt, days * MILLISECONDS_PER_DAY)
   }
 
   function PlusHours(dt: LocalDateTime, hours: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusHours(dt, hours))
   {
-    Plus(dt, hours * DateTimeConstant.MILLISECONDS_PER_HOUR)
+    Plus(dt, hours * MILLISECONDS_PER_HOUR)
   }
 
   function PlusMinutes(dt: LocalDateTime, minutes: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusMinutes(dt, minutes))
   {
-    Plus(dt, minutes * DateTimeConstant.MILLISECONDS_PER_MINUTE)
+    Plus(dt, minutes * MILLISECONDS_PER_MINUTE)
   }
 
   function PlusSeconds(dt: LocalDateTime, seconds: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusSeconds(dt, seconds))
   {
-    Plus(dt, seconds * DateTimeConstant.MILLISECONDS_PER_SECOND)
+    Plus(dt, seconds * MILLISECONDS_PER_SECOND)
   }
 
   function PlusMilliseconds(dt: LocalDateTime, milliseconds: int): LocalDateTime
@@ -212,7 +211,7 @@ module LocalDateTime {
     requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
     ensures IsValidLocalDateTime(PlusDuration(dt, duration))
   {
-    var totalMillis := duration.seconds * DateTimeConstant.MILLISECONDS_PER_SECOND + duration.millis;
+    var totalMillis := duration.seconds * MILLISECONDS_PER_SECOND + duration.millis;
     Plus(dt, totalMillis)
   }
 
@@ -220,7 +219,7 @@ module LocalDateTime {
     requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
     ensures IsValidLocalDateTime(MinusDuration(dt, duration))
   {
-    var totalMillis := duration.seconds * DateTimeConstant.MILLISECONDS_PER_SECOND + duration.millis;
+    var totalMillis := duration.seconds * MILLISECONDS_PER_SECOND + duration.millis;
     Plus(dt, -totalMillis)
   }
 
