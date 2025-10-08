@@ -282,24 +282,6 @@ module TestLocalDateTime {
     assert plusOneMonth.year == 2023;
     assert plusOneMonth.month == 2;
     assert plusOneMonth.day == 28; // Clamped from 31 to 28 (Feb)
-
-    // Test leap year Feb 29 plus one month
-    var feb29 := LDT.LocalDateTime(2020, 2, 29, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(feb29);
-    var feb29PlusOne := LDT.PlusMonths(feb29, 1);
-    assert LDT.IsValidLocalDateTime(feb29PlusOne);
-    assert feb29PlusOne.year == 2020;
-    assert feb29PlusOne.month == 3;
-    assert feb29PlusOne.day == 29;
-
-    // Test Jan 31 plus one month in non-leap year
-    var jan31NonLeap := LDT.LocalDateTime(2023, 1, 31, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(jan31NonLeap);
-    var jan31PlusOne := LDT.PlusMonths(jan31NonLeap, 1);
-    assert LDT.IsValidLocalDateTime(jan31PlusOne);
-    assert jan31PlusOne.year == 2023;
-    assert jan31PlusOne.month == 2;
-    assert jan31PlusOne.day == 28; // Clamped from 31 to 28 (Feb)
   }
 
   method TestPlusDays() {

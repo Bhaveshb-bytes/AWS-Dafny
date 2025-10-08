@@ -23,7 +23,12 @@ module TestLocalDateTimePrint {
   {
     print "=== Testing Arithmetic Functions ===\n";
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
-    var duration := Duration.Duration(3661, 500); // 1 hour, 1 minute, 1 second, 500ms
+        // 1 hour + 1 minute + 1 second + 500ms
+    var hourDuration := Duration.FromHours(1);
+    var minuteDuration := Duration.FromMinutes(1);
+    var secondDuration := Duration.FromSeconds(1);
+    var millisDuration := Duration.FromMilliseconds(500);
+    var duration := Duration.Plus(Duration.Plus(Duration.Plus(hourDuration, minuteDuration), secondDuration), millisDuration);
 
     var plusResult := LDT.PlusDuration(dt, duration);
     if LDT.GetHour(plusResult) != 15 {
@@ -55,7 +60,7 @@ module TestLocalDateTimePrint {
 
     // Test cross-day boundary
     var lateNight := LDT.LocalDateTime(2023, 6, 15, 23, 30, 45, 123);
-    var longDuration := Duration.Duration(7200, 0); // 2 hours
+    var longDuration := Duration.FromHours(2);
     var nextDay := LDT.PlusDuration(lateNight, longDuration);
     if LDT.GetDay(nextDay) != 16 {
       print "FAIL: Cross-day boundary day mismatch. Got: ", LDT.GetDay(nextDay), " Expected: 16\n";
