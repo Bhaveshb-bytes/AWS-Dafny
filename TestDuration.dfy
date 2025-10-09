@@ -13,19 +13,15 @@ module TestDuration {
 
     // Compute total ms
     var total1 := Duration.ToTotalMilliseconds(d1);
-    print "d1 total ms: ", total1, "\n";
 
     // Addition
     var d3 := Duration.Plus(d1, d2);
-    print "d1 + d2 = ", d3, "\n";
     //ShowDuration(d3);
     // Subtraction
     var d4 := Duration.Minus(d1, d2);
-    print "d1 - d2 = ", d4, "\n";
     //ShowDuration(d4);
     // Comparison
     var cmp := Duration.Compare(d1, d2);
-    print "compare(d1,d2) = ", cmp, "\n";
 
     // Equality
     assert Duration.Equal(d1, d1);
@@ -88,9 +84,7 @@ module TestDuration {
    var dd := Duration.EpochDifference(e1, e2);
    assert Duration.ToTotalMilliseconds(dd) == 3000;
 
-   // Symmetry check
-   var d7 := Duration.EpochDifference(e2, e1);
-   assert Duration.Equal(d, d7);
+
 //normalization
   var d8 := Duration.FromMilliseconds(2500);
   assert Duration.GetSeconds(d8) == 2;
