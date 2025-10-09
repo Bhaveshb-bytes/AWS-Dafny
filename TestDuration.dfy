@@ -1,8 +1,8 @@
 include "Duration.dfy"
 
 module TestDuration {
-  import Std.DateTime.Duration
- 
+  import Duration
+
   method Main() {
     var d1 := Duration.Duration(10, 500);
     var d2 := Duration.Duration(5, 250);
@@ -81,7 +81,7 @@ module TestDuration {
   assert Duration.Compare(d5, d5) == 0;
   assert Duration.Compare(d5, d6) == 1;
   assert Duration.Compare(d6, d5) == -1;
-  
+
 // comparing epoch difference
    var e1 := 5000;
    var e2 := 8000;
@@ -99,4 +99,3 @@ module TestDuration {
   }
 
 }
-
