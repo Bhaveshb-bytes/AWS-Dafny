@@ -114,24 +114,24 @@ module TestLocalDateTime {
     var duration := Duration.FromMilliseconds(3661500); // 1 hour, 1 minute, 1 second, 500ms
 
     var plusResult := LDT.PlusDuration(dt, duration);
-    assert LDT.GetHour(plusResult) == 15;  // Should be one hour later
-    assert LDT.GetMinute(plusResult) == 31; // Should be one minute later
-    assert LDT.GetSecond(plusResult) == 46; // Should be one second later
-    assert LDT.GetMillisecond(plusResult) == 623; // Should be 500ms later
+    expect LDT.GetHour(plusResult) == 15;  // Should be one hour later
+    expect LDT.GetMinute(plusResult) == 31; // Should be one minute later
+    expect LDT.GetSecond(plusResult) == 46; // Should be one second later
+    expect LDT.GetMillisecond(plusResult) == 623; // Should be 500ms later
 
     var minusResult := LDT.MinusDuration(dt, duration);
-    assert LDT.GetHour(minusResult) == 13;  // Should be one hour earlier
-    assert LDT.GetMinute(minusResult) == 29; // Should be one minute earlier
-    assert LDT.GetSecond(minusResult) == 43;
-    assert LDT.GetMillisecond(minusResult) == 623; // 123 - 500 + 1000 = 623
+    expect LDT.GetHour(minusResult) == 13;  // Should be one hour earlier
+    expect LDT.GetMinute(minusResult) == 29; // Should be one minute earlier
+    expect LDT.GetSecond(minusResult) == 43;
+    expect LDT.GetMillisecond(minusResult) == 623; // 123 - 500 + 1000 = 623
 
     // Test cross-day boundary
     var lateNight := LDT.LocalDateTime(2023, 6, 15, 23, 30, 45, 123);
     var longDuration := Duration.FromMilliseconds(7200000); // 2 hours
     var nextDay := LDT.PlusDuration(lateNight, longDuration);
-    assert LDT.GetDay(nextDay) == 16;  // Should be next day
-    assert LDT.GetHour(nextDay) == 1;  // Should be 1:30 AM
-    assert LDT.GetMinute(nextDay) == 30;
+    expect LDT.GetDay(nextDay) == 16;  // Should be next day
+    expect LDT.GetHour(nextDay) == 1;  // Should be 1:30 AM
+    expect LDT.GetMinute(nextDay) == 30;
   }
 
   method TestFormatFunction()
