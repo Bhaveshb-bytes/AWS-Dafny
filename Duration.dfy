@@ -211,64 +211,44 @@ function ToString(d: Duration): string
     var minutes := (total_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
     "PT" + OfInt(hours) + "H" + OfInt(minutes) + "M"
   }
-//PT9650H30M45.123S
-function SeqIndexOf(s: seq<char>, c: char): int
-  ensures -1 <= SeqIndexOf(s, c) < |s|
+//PT9650H30M45.123S s: seq<char>
+function StringIndexOf(s: string, c: char): int
+  ensures -1 <= StringIndexOf(s, c) < |s|
 {
   if |s| == 0 then -1
   else if s[0] == c then 0
   else
-    var tail := SeqIndexOf(s[1..], c);
-    if tail == -1 then -1 else tail + 1
+    var i := StringIndexOf(s[1..], c);
+    if i == -1 then -1 else i + 1
 }
-
 
 
 function ParseString(text: string): Duration
   requires text[0..2] == "PT"  // must start with PT
-  ensures 0 <= Parse(text).millis < 1000
+  ensures 0 <= ParseString(text).millis < 1000
 {
   // Find positions of delimiters
-  var hPos := SeqIndexOf(text, 'H');
-  var mPos := SeqIndexOf(text, 'M');
-  var dotPos := SeqIndexOf(text, '.');
-  var sPos := SeqIndexOf(text, 'S');
+  var len := |text|;
+  var hPos := StringIndexOf(text, 'H');
+  var mPos := StringIndexOf(text, 'M');
+//  var dotPos := StringIndexOf(text, '.');
+//  var sPos := StringIndexOf(text, 'S');
 
   // Extract substrings between markers
   var hourStr := text[2..hPos];
   var minuteStr :=  text[hPos + 1 .. mPos];
-  var secondStr := text[mPos + 1 .. dotPos];
-  var millisecondStr := text[dotPos + 1 .. sPos];
+  var secondStr := text[mPos + 1 .. len];
+//  var millisecondStr := text[dotPos + 1 .. sPos];
 
   // Convert to integers
   var hour := ToInt(hourStr);
   var minute := ToInt(minuteStr);
   var second := ToInt(secondStr);
-  var millisecond := ToInt(millisecondStr);
+//  var millisecond := ToInt(millisecondStr);
 
   // Compute total seconds and construct duration
   var totalSeconds := hour * SECONDS_PER_HOUR + minute * SECONDS_PER_MINUTE + second;
-  Duration(totalSeconds, millisecond)
+  Duration(totalSeconds, 0)
 }
-
- function Parse(text: string): Duration
-   requires |text| == 12 
- {
-       var hourStr := text[0..2];
-       var minuteStr := text[3..5];
-       var secondStr := text[6..8];
-       var millisecondStr := text[9..12];
-
-
-       var hour := ToInt(hourStr);
-       var minute := ToInt(minuteStr);
-       var second := ToInt(secondStr);
-       var millisecond := ToInt(millisecondStr);
-
-
-       var totalSeconds := hour * SECONDS_PER_HOUR + minute * SECONDS_PER_MINUTE + second;
-       Duration(totalSeconds, millisecond)
-
- }
 //build command: dafny build TestDuration.dfy --standard-libraries
  }
