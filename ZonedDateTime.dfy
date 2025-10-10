@@ -3,7 +3,7 @@ include "Duration.dfy"
 include "DateTimeUtils.dfy"
 
 module Std.DateTime.ZonedDateTime {
-    import LDT = Std.DateTime.LocalDateTime
+    import LDT = LocalDateTime
     import Duration
     import DTUtils = DateTimeUtils
 
@@ -67,4 +67,23 @@ module Std.DateTime.ZonedDateTime {
         returns (result: LDT.Result<ZonedDateTime, string>, status: Status)
         requires LDT.IsValidLocalDateTime(local)
         ensures result.Success? ==> IsValid(result.value)
+    {
+        var p := ResolveLocalImpl(zoneId, local.year, local.month, local.day, local.hour, local.minute, local.second, local.millisecond, preference);
+        var status' := p[0] as int;
+        var off     := p[1] as int;
+
+        var ny := p[2] as int; var nm := p[3] as int; var nd := p[4] as int;
+        var hh := p[5] as int; var mm := p[6] as int; var ss := p[7] as int; var ms := p[8] as int;
+
+        var normLocal := LDT.LocalDateTime(ny, nm, nd, hh, mm, ss, ms);
+        if !LDT.IsValidLocalDateTime(normLocal) {
+            result := LDT.Failure("Normalized local is invalid");
+            status := status';
+            return;
+        }
+
+        result := LDT.Success(ZonedDateTime(normLocal, zoneId, off));
+        status := status';
+    }
+
 }
