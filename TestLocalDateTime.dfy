@@ -460,6 +460,68 @@ module TestLocalDateTime {
     expect minus100Millis.second == 45;
     expect minus100Millis.millisecond == 950;
   }
+
+  method TestComparisonMethods() {
+    // Create test date times
+    var dt1 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+    var dt2 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 124); // 1ms later
+    var dt3 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123); // Same as dt1
+    var dt4 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 123); // 1s later
+    var dt5 := LDT.LocalDateTime(2023, 6, 16, 14, 30, 45, 123); // 1 day later
+
+    assert LDT.IsValidLocalDateTime(dt1);
+    assert LDT.IsValidLocalDateTime(dt2);
+    assert LDT.IsValidLocalDateTime(dt3);
+    assert LDT.IsValidLocalDateTime(dt4);
+    assert LDT.IsValidLocalDateTime(dt5);
+
+    // Test IsBefore
+    assert LDT.IsBefore(dt1, dt2); // dt1 is before dt2 (1ms difference)
+    assert LDT.IsBefore(dt1, dt4); // dt1 is before dt4 (1s difference)
+    assert LDT.IsBefore(dt1, dt5); // dt1 is before dt5 (1 day difference)
+    assert !LDT.IsBefore(dt1, dt3); // dt1 is not before dt3 (same time)
+    assert !LDT.IsBefore(dt2, dt1); // dt2 is not before dt1
+
+    // Test IsAfter
+    assert LDT.IsAfter(dt2, dt1); // dt2 is after dt1
+    assert LDT.IsAfter(dt4, dt1); // dt4 is after dt1
+    assert LDT.IsAfter(dt5, dt1); // dt5 is after dt1
+    assert !LDT.IsAfter(dt1, dt3); // dt1 is not after dt3 (same time)
+    assert !LDT.IsAfter(dt1, dt2); // dt1 is not after dt2
+
+    // Test IsEqual
+    assert LDT.IsEqual(dt1, dt3); // dt1 equals dt3
+    assert LDT.IsEqual(dt3, dt1); // dt3 equals dt1 (symmetric)
+    assert !LDT.IsEqual(dt1, dt2); // dt1 does not equal dt2
+    assert !LDT.IsEqual(dt1, dt4); // dt1 does not equal dt4
+    assert !LDT.IsEqual(dt1, dt5); // dt1 does not equal dt5
+
+    // Test edge cases with different components
+    var earlyYear := LDT.LocalDateTime(2022, 6, 15, 14, 30, 45, 123);
+    var laterMonth := LDT.LocalDateTime(2023, 7, 15, 14, 30, 45, 123);
+    var earlierDay := LDT.LocalDateTime(2023, 6, 14, 14, 30, 45, 123);
+    var earlierHour := LDT.LocalDateTime(2023, 6, 15, 13, 30, 45, 123);
+    var earlierMinute := LDT.LocalDateTime(2023, 6, 15, 14, 29, 45, 123);
+    var earlierSecond := LDT.LocalDateTime(2023, 6, 15, 14, 30, 44, 123);
+    var earlierMs := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 122);
+
+    assert LDT.IsValidLocalDateTime(earlyYear);
+    assert LDT.IsValidLocalDateTime(laterMonth);
+    assert LDT.IsValidLocalDateTime(earlierDay);
+    assert LDT.IsValidLocalDateTime(earlierHour);
+    assert LDT.IsValidLocalDateTime(earlierMinute);
+    assert LDT.IsValidLocalDateTime(earlierSecond);
+    assert LDT.IsValidLocalDateTime(earlierMs);
+
+    // Test different component comparisons
+    assert LDT.IsBefore(earlyYear, dt1); // Earlier year
+    assert LDT.IsAfter(laterMonth, dt1); // Later month
+    assert LDT.IsBefore(earlierDay, dt1); // Earlier day
+    assert LDT.IsBefore(earlierHour, dt1); // Earlier hour
+    assert LDT.IsBefore(earlierMinute, dt1); // Earlier minute
+    assert LDT.IsBefore(earlierSecond, dt1); // Earlier second
+    assert LDT.IsBefore(earlierMs, dt1); // Earlier millisecond
+  }
 }
 
 method Main()
@@ -490,5 +552,6 @@ method Main()
   TestLocalDateTime.TestMinusMinutes();
   TestLocalDateTime.TestMinusSeconds();
   TestLocalDateTime.TestMinusMilliseconds();
+  TestLocalDateTime.TestComparisonMethods();
   print "All tests passed\n";
 }

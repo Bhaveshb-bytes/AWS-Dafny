@@ -245,6 +245,25 @@ module LocalDateTime {
       0
   }
 
+  // Convenience comparison methods
+  predicate IsBefore(dt1: LocalDateTime, dt2: LocalDateTime)
+    requires IsValidLocalDateTime(dt1) && IsValidLocalDateTime(dt2)
+  {
+    CompareLocal(dt1, dt2) < 0
+  }
+
+  predicate IsAfter(dt1: LocalDateTime, dt2: LocalDateTime)
+    requires IsValidLocalDateTime(dt1) && IsValidLocalDateTime(dt2)
+  {
+    CompareLocal(dt1, dt2) > 0
+  }
+
+  predicate IsEqual(dt1: LocalDateTime, dt2: LocalDateTime)
+    requires IsValidLocalDateTime(dt1) && IsValidLocalDateTime(dt2)
+  {
+    CompareLocal(dt1, dt2) == 0
+  }
+
   // Now function which returns current local date time
   function Now(): Result<LocalDateTime, string>
     ensures Now().Success? ==> IsValidLocalDateTime(Now().value)
@@ -318,6 +337,7 @@ module LocalDateTime {
   }
 
   // Formatting functions
+  // ISO 8601 format
   function ToString(dt: LocalDateTime): string
     requires IsValidLocalDateTime(dt)
   {
@@ -345,6 +365,7 @@ module LocalDateTime {
     else if pattern == "MM/dd/yyyy" then
       DTUtils.PadWithZeros(dt.month, 2) + "/" + DTUtils.PadWithZeros(dt.day, 2) + "/" + OfInt(dt.year)
     else
+      // Default to ISO 8601 format, yyyy-MM-ddTHH:mm:ss.fff
       ToString(dt)
   }
 }
