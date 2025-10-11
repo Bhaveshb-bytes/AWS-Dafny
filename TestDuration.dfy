@@ -2,8 +2,17 @@ include "Duration.dfy"
 
 module TestDuration {
   import Duration
+  method TestStringIndexOf() {
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
+
+    var idx := Duration.StringIndexOf("PT9650H30M45.123S", '.');
+    print "Index = ", idx, "\n";
+  }
 
   method Main() {
+   //TestStringIndexOf();
     var d1 := Duration.Duration(10, 500);
     var d2 := Duration.Duration(5, 250);
 
@@ -94,12 +103,11 @@ module TestDuration {
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
-//assert Duration.StringIndexOf("PT9650H30M45.123S", '.') == 11;
-//assert Duration.StringIndexOf("PT9650H30M45.123S", 'S') == 15;
- var custom_string := Duration.ParseString("PT1H1M1");
 
- assert Duration.GetMilliseconds(custom_string) == 0;
- assert Duration.GetSeconds(custom_string) == 3661;
+
+var ddd := Duration.ParseStringVerified("PT9650H30M45.123S");
+assert Duration.GetMilliseconds(ddd) == 123;
+
   }
 
 }

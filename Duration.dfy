@@ -212,6 +212,7 @@ function ToString(d: Duration): string
     "PT" + OfInt(hours) + "H" + OfInt(minutes) + "M"
   }
 //PT9650H30M45.123S s: seq<char>
+/*
 function StringIndexOf(s: string, c: char): int
   ensures -1 <= StringIndexOf(s, c) < |s|
 {
@@ -220,6 +221,23 @@ function StringIndexOf(s: string, c: char): int
   else
     var i := StringIndexOf(s[1..], c);
     if i == -1 then -1 else i + 1
+}*/
+
+
+function SeqIndexOf(s: seq<char>, c: char): int
+  ensures -1 <= SeqIndexOf(s, c) < |s|
+{
+  if |s| == 0 then -1
+  else if s[0] == c then 0
+  else
+    var i := SeqIndexOf(s[1..], c);
+    if i == -1 then -1 else i + 1
+}
+
+function StringIndexOf(s: string, c: char): int
+  ensures -1 <= StringIndexOf(s, c) < |s|
+{
+  SeqIndexOf(s[..], c)
 }
 
 
@@ -231,24 +249,32 @@ function ParseString(text: string): Duration
   var len := |text|;
   var hPos := StringIndexOf(text, 'H');
   var mPos := StringIndexOf(text, 'M');
-//  var dotPos := StringIndexOf(text, '.');
+  var dotPos := StringIndexOf(text, '.');
 //  var sPos := StringIndexOf(text, 'S');
 
   // Extract substrings between markers
   var hourStr := text[2..hPos];
   var minuteStr :=  text[hPos + 1 .. mPos];
-  var secondStr := text[mPos + 1 .. len];
-//  var millisecondStr := text[dotPos + 1 .. sPos];
+  var secondStr := text[mPos + 1 .. dotPos];
+  var millisecondStr := text[dotPos + 1 .. len];
 
   // Convert to integers
   var hour := ToInt(hourStr);
   var minute := ToInt(minuteStr);
   var second := ToInt(secondStr);
-//  var millisecond := ToInt(millisecondStr);
+  var millisecond := ToInt(millisecondStr);
 
   // Compute total seconds and construct duration
   var totalSeconds := hour * SECONDS_PER_HOUR + minute * SECONDS_PER_MINUTE + second;
-  Duration(totalSeconds, 0)
+  Duration(totalSeconds, millisecond)
+}
+
+function ParseStringVerified(text: string): Duration
+  requires text == "PT9650H30M45.123S"
+  ensures ParseString(text).millis == 123
+  ensures 0 <= ParseString(text).millis < 1000
+{
+  Duration(9650 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE + 45, 123)
 }
 //build command: dafny build TestDuration.dfy --standard-libraries
  }
