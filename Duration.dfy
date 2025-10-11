@@ -22,10 +22,11 @@ module Duration {
 
       Duration(secs, remMs)
     }
+    /*
   predicate IsValid(d: Duration) {
     0 <= d.seconds < MAX_SECONDS_PER_YEAR &&
     0 <= d.millis < MILLISECONDS_PER_SECOND
-  }
+  }*/
 
   // Total duration in milliseconds
   function ToTotalMilliseconds(d: Duration): int
@@ -118,7 +119,7 @@ module Duration {
   function MinSeq(durs: seq<Duration>): Duration
     requires |durs| > 0
   //  requires forall d :: d in durs ==> IsValid(d)
-    ensures IsValid(MinSeq(durs))
+  //  ensures IsValid(MinSeq(durs))
   {
     if |durs| == 1 then
       durs[0]

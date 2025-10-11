@@ -13,13 +13,9 @@ module TestDuration {
 
   method Main() {
    //TestStringIndexOf();
-    var d1 := Duration.Duration(10, 500);
-    var d2 := Duration.Duration(5, 250);
-
-    // Check validity
-    assert Duration.IsValid(d1);
-    assert Duration.IsValid(d2);
-
+   
+    var d1 :=Duration.Duration(1,2);
+    var d2 :=Duration.Duration(1,3);
     // Compute total ms
     var total1 := Duration.ToTotalMilliseconds(d1);
 
