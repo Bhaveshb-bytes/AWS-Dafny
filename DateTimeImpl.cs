@@ -8,14 +8,15 @@ public static class DateTimeImpl
     public static ISequence<Rune> GetNowComponents()
     {
         var now = DateTime.Now;
-        var components = new[] {
+        var components = new[]
+        {
             now.Year,
             now.Month,
             now.Day,
             now.Hour,
             now.Minute,
             now.Second,
-            now.Millisecond
+            now.Millisecond,
         };
 
         // Convert to sequence of integers as runes
@@ -23,15 +24,36 @@ public static class DateTimeImpl
         return Sequence<Rune>.FromArray(runes);
     }
 
-    public static BigInteger ToEpochTimeMilliseconds(BigInteger year, BigInteger month, BigInteger day, BigInteger hour, BigInteger minute, BigInteger second, BigInteger millisecond, TimeSpan? offset = null)
+    public static BigInteger ToEpochTimeMilliseconds(
+        BigInteger year,
+        BigInteger month,
+        BigInteger day,
+        BigInteger hour,
+        BigInteger minute,
+        BigInteger second,
+        BigInteger millisecond,
+        TimeSpan? offset = null
+    )
     {
-        return new DateTimeOffset((int)year, (int)month, (int)day, (int)hour, (int)minute, (int)second, (int)millisecond, offset ?? TimeSpan.Zero)
-            .ToUnixTimeMilliseconds();
+        return new DateTimeOffset(
+            (int)year,
+            (int)month,
+            (int)day,
+            (int)hour,
+            (int)minute,
+            (int)second,
+            (int)millisecond,
+            offset ?? TimeSpan.Zero
+        ).ToUnixTimeMilliseconds();
     }
 
-    public static ISequence<BigInteger> FromEpochTimeMilliseconds(BigInteger epochMilliseconds, TimeSpan? offset = null)
+    public static ISequence<BigInteger> FromEpochTimeMilliseconds(
+        BigInteger epochMilliseconds,
+        TimeSpan? offset = null
+    )
     {
-        DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds((long)epochMilliseconds)
+        DateTimeOffset dateTimeOffset = DateTimeOffset
+            .FromUnixTimeMilliseconds((long)epochMilliseconds)
             .ToOffset(offset ?? TimeSpan.Zero);
         var components = new BigInteger[]
         {
@@ -41,7 +63,7 @@ public static class DateTimeImpl
             dateTimeOffset.Hour,
             dateTimeOffset.Minute,
             dateTimeOffset.Second,
-            dateTimeOffset.Millisecond
+            dateTimeOffset.Millisecond,
         };
         return Sequence<BigInteger>.FromArray(components);
     }
