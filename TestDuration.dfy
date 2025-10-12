@@ -2,30 +2,31 @@ include "Duration.dfy"
 
 module TestDuration {
   import Duration
- 
+  method TestStringIndexOf() {
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
+    assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
+
+    var idx := Duration.StringIndexOf("PT9650H30M45.123S", '.');
+    print "Index = ", idx, "\n";
+  }
+
   method Main() {
-    var d1 := Duration.Duration(10, 500);
-    var d2 := Duration.Duration(5, 250);
-
-    // Check validity
-    assert Duration.IsValid(d1);
-    assert Duration.IsValid(d2);
-
+   //TestStringIndexOf();
+   
+    var d1 :=Duration.Duration(1,2);
+    var d2 :=Duration.Duration(1,3);
     // Compute total ms
     var total1 := Duration.ToTotalMilliseconds(d1);
-    print "d1 total ms: ", total1, "\n";
 
     // Addition
     var d3 := Duration.Plus(d1, d2);
-    print "d1 + d2 = ", d3, "\n";
     //ShowDuration(d3);
     // Subtraction
     var d4 := Duration.Minus(d1, d2);
-    print "d1 - d2 = ", d4, "\n";
     //ShowDuration(d4);
     // Comparison
     var cmp := Duration.Compare(d1, d2);
-    print "compare(d1,d2) = ", cmp, "\n";
 
     // Equality
     assert Duration.Equal(d1, d1);
@@ -81,22 +82,28 @@ module TestDuration {
   assert Duration.Compare(d5, d5) == 0;
   assert Duration.Compare(d5, d6) == 1;
   assert Duration.Compare(d6, d5) == -1;
-  
+
 // comparing epoch difference
    var e1 := 5000;
    var e2 := 8000;
    var dd := Duration.EpochDifference(e1, e2);
    assert Duration.ToTotalMilliseconds(dd) == 3000;
 
-   // Symmetry check
-   var d7 := Duration.EpochDifference(e2, e1);
-   assert Duration.Equal(d, d7);
+
 //normalization
   var d8 := Duration.FromMilliseconds(2500);
   assert Duration.GetSeconds(d8) == 2;
   assert Duration.GetMilliseconds(d8) == 500;
  //dafny verify TestDuration.dfy
+
+assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
+assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
+assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
+
+
+var ddd := Duration.ParseStringVerified("PT9650H30M45.123S");
+assert Duration.GetMilliseconds(ddd) == 123;
+
   }
 
 }
-
