@@ -208,7 +208,7 @@ module LocalDateTime {
 
   // Arithmetic functions with Duration
   function PlusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+    requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(PlusDuration(dt, duration))
   {
     var totalMillis := duration.seconds * MILLISECONDS_PER_SECOND + duration.millis;
@@ -216,7 +216,7 @@ module LocalDateTime {
   }
 
   function MinusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt) && Duration.IsValid(duration)
+    requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(MinusDuration(dt, duration))
   {
     var totalMillis := duration.seconds * MILLISECONDS_PER_SECOND + duration.millis;
