@@ -47,6 +47,13 @@ The Zoned Date Time will have a datatype that stores the LocalDateTime datatype,
 
 To resolve the local date time, we will first use the timezone from zoneId to determine the local date time is valid or not. If the local date time is not valid, it could be during spring DST transition. Therefore, we have to shift forward to the next valid time. If the local date time is ambiguous, we will choose either the earlier time or the later time based on the preference defined by the zoned date time.
 
+## How to execute ZonedDateTime Test Sample
+
+```
+dafny build TestZonedDateTime.dfy --target:cs TestZonedDateTime.dfy DateTimeImpl.cs ZonedDateTimeImpl.cs --standard-libraries
+./TestZonedDateTime
+```
+
 **Current Questions:**
 
 1.	Is ShiftForward the desired policy for Gap times, or rejection or a different normalization?

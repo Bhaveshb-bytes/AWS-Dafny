@@ -2,10 +2,12 @@ include "LocalDateTime.dfy"
 include "Duration.dfy"
 include "DateTimeUtils.dfy"
 
-module Std.DateTime.ZonedDateTime {
+module ZonedDateTime {
     import LDT = LocalDateTime
     import Duration
-    import DTUtils = DateTimeUtils
+
+    // Result type for operations that can fail
+    datatype Result<T, E> = Success(value: T) | Failure(error: E)
 
     // DST status
     // 0 - unique: only one valid offset
@@ -41,32 +43,46 @@ module Std.DateTime.ZonedDateTime {
     }
 
     // Create a ZonedDateTime from components, resolving local date-time with preference
-    method {:extern "ZonedDateTimeImpl", "ResolveLocal"} {:axiom} ResolveLocalImpl(zoneId: string,
+    function {:extern "ZonedDateTimeImpl", "ResolveLocal"} {:axiom} ResolveLocalImpl(zoneId: string,
                     year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int,
-                    preference: int)
-            returns (payload: seq<char>)
-            ensures |payload| == 9
+                    preference: int) :seq<int>
+        ensures |ResolveLocalImpl(zoneId, year, month, day, hour, minute, second, millisecond, preference)| == 9
 
     // Helper method to create ZonedDateTime from components
-    method {:extern "ZonedDateTimeImpl", "NowZoned"} {:axiom} NowZonedImpl() 
-        returns (offsetMinutes: int, 
-                year: int, month: int, day: int, hour: int, minute: int, second: int, ms: int, 
-                zoneId: string)
+    function {:extern "ZonedDateTimeImpl", "NowZoned"} {:axiom} NowZonedImpl(): seq<int>
+        ensures |NowZonedImpl()| == 8
+
+    function {:extern "ZonedDateTimeImpl", "GetNowZoneId"} {:axiom} GetNowZoneIdImpl(): seq<char>
+        ensures |GetNowZoneIdImpl()| > 0
 
     // Create ZonedDateTime from components
-    method NowZoned() returns (result: ZonedDateTime)
-        ensures IsValidZonedDateTime(result)
+    function NowZoned(): Result<ZonedDateTime, string>
+        ensures NowZoned().Success? ==> IsValidZonedDateTime(NowZoned().value)
     {
-        var (off, y, m, d, hh, mm, ss, ms, zid) := NowZonedImpl();
-        var local := LDT.LocalDateTime(y, m, d, hh, mm, ss, ms);
-        result := ZonedDateTime(local, zid, off);
+        var components := NowZonedImpl();
+        if |components| == 8 then
+            var off := components[0] as int;
+            var year := components[1] as int;
+            var month := components[2] as int;
+            var day := components[3] as int;
+            var hour := components[4] as int;
+            var minute := components[5] as int;
+            var second := components[6] as int;
+            var millisecond := components[7] as int;
+            var local := LDT.LocalDateTime(year, month, day, hour, minute, second, millisecond);
+        
+            var zid := GetNowZoneIdImpl();
+            var zdt := ZonedDateTime(local, zid, off);
+            if IsValidZonedDateTime(zdt) then
+                Success(zdt)
+            else
+                Failure("Invalid ZonedDateTime created")
+        else
+            Failure("Failed to get current ZonedDateTime components")
     }
 
     // Creation function with preference for resolving local date-time
-    method OfLocal(zoneId: string, local: LDT.LocalDateTime, preference: Preference) 
-        returns (result: LDT.Result<ZonedDateTime, string>, status: Status)
-        requires LDT.IsValidLocalDateTime(local)
-        ensures result.Success? ==> IsValid(result.value)
+    function OfLocal(zoneId: string, local: LDT.LocalDateTime, preference: Preference): (Result<ZonedDateTime, string>, Status)
     {
         var p := ResolveLocalImpl(zoneId, local.year, local.month, local.day, local.hour, local.minute, local.second, local.millisecond, preference);
         var status' := p[0] as int;
@@ -76,14 +92,10 @@ module Std.DateTime.ZonedDateTime {
         var hh := p[5] as int; var mm := p[6] as int; var ss := p[7] as int; var ms := p[8] as int;
 
         var normLocal := LDT.LocalDateTime(ny, nm, nd, hh, mm, ss, ms);
-        if !LDT.IsValidLocalDateTime(normLocal) {
-            result := LDT.Failure("Normalized local is invalid");
-            status := status';
-            return;
-        }
-
-        result := LDT.Success(ZonedDateTime(normLocal, zoneId, off));
-        status := status';
+        if !LDT.IsValidLocalDateTime(normLocal) then
+            (Failure("Normalized local is invalid"), status')
+        else
+            (Success(ZonedDateTime(normLocal, zoneId, off)), status')
     }
 
 }
