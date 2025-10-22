@@ -4,12 +4,10 @@ include "DateTimeConstant.dfy"
 
 module LocalDateTime {
   import opened Std.Strings
+  import opened Std.Wrappers
   import opened DateTimeConstant
   import Duration
   import DTUtils = DateTimeUtils
-
-  // Result type for operations that can fail
-  datatype Result<T, E> = Success(value: T) | Failure(error: E)
 
   // LocalDateTime: represents date-time without time zone information
   datatype LocalDateTime = LocalDateTime(
