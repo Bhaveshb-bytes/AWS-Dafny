@@ -45,12 +45,7 @@ module Duration {
 
       Duration(seconds, milliseconds)
     }
-  // Equality
-  function Equal(d1: Duration, d2: Duration): bool
- //   requires IsValid(d1) && IsValid(d2)
-  {
-    ToTotalMilliseconds(d1) == ToTotalMilliseconds(d2)
-  }
+
 
   // Comparison (-1 if d1 < d2, 0 if equal, 1 if greater)
   function Compare(d1: Duration, d2: Duration): int
