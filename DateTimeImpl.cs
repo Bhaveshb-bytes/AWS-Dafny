@@ -5,10 +5,10 @@ using Dafny;
 
 public static class DateTimeImpl
 {
-    public static ISequence<Rune> GetNowComponents()
+    public static ISequence<BigInteger> GetNowComponents()
     {
         var now = DateTime.Now;
-        var components = new[]
+        var components = new BigInteger[]
         {
             now.Year,
             now.Month,
@@ -19,9 +19,7 @@ public static class DateTimeImpl
             now.Millisecond,
         };
 
-        // Convert to sequence of integers as runes
-        var runes = components.Select(i => new Rune(i)).ToArray();
-        return Sequence<Rune>.FromArray(runes);
+        return Sequence<BigInteger>.FromArray(components);
     }
 
     public static BigInteger ToEpochTimeMilliseconds(

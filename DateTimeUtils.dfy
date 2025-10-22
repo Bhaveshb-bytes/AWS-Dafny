@@ -20,7 +20,7 @@ module DateTimeUtils {
 
   // External function for getting current time components
   function {:extern "DateTimeImpl", "GetNowComponents"}
-    {:axiom} GetNowComponentsFunc(): seq<char>
+    {:axiom} GetNowComponentsFunc(): seq<int>
     ensures |GetNowComponentsFunc()| == 7
 
   // Leap year calculation
