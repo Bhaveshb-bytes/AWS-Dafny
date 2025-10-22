@@ -2,6 +2,7 @@ include "DateTimeConstant.dfy"
 
 module DateTimeUtils {
   import opened Std.Strings
+  import opened Std.BoundedInts
   import opened DateTimeConstant
 
   // Month names for better error messages
@@ -16,7 +17,7 @@ module DateTimeUtils {
     {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int>
     ensures |FromEpochTimeMillisecondsFunc(epochMillis)| == 7
     ensures var components := FromEpochTimeMillisecondsFunc(epochMillis);
-            IsValidDateTime(components[0], components[1], components[2], components[3], components[4], components[5], components[6])
+            IsValidDateTime(components[0] as uint16, components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
 
   // External function for getting current time components
   function {:extern "DateTimeImpl", "GetNowComponents"}
@@ -53,10 +54,10 @@ module DateTimeUtils {
   }
 
   // Date-time validation predicate
-  predicate IsValidDateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int)
+  predicate IsValidDateTime(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16)
   {
     1 <= month <= 12 &&
-    1 <= day <= DaysInMonth(year, month) &&
+    1 <= day <= (DaysInMonth(year as int, month as int) as uint8) &&
     0 <= hour < HOURS_PER_DAY &&
     0 <= minute < MINUTES_PER_HOUR &&
     0 <= second < SECONDS_PER_MINUTE &&
@@ -75,28 +76,28 @@ module DateTimeUtils {
   }
 
   // Convert time portion to total milliseconds since midnight
-  function TimeToMilliseconds(hour: int, minute: int, second: int, millisecond: int): int
+  function TimeToMilliseconds(hour: uint8, minute: uint8, second: uint8, millisecond: uint16): int
     requires 0 <= hour < HOURS_PER_DAY && 0 <= minute < MINUTES_PER_HOUR
     requires 0 <= second < SECONDS_PER_MINUTE && 0 <= millisecond < MILLISECONDS_PER_SECOND
-    ensures 0 <= TimeToMilliseconds(hour, minute, second, millisecond) < MILLISECONDS_PER_DAY
+    ensures 0 <= TimeToMilliseconds(hour, minute, second, millisecond) < (MILLISECONDS_PER_DAY as int)
   {
-    ((hour * MINUTES_PER_HOUR + minute) * SECONDS_PER_MINUTE + second) * MILLISECONDS_PER_SECOND + millisecond
+    (((hour as int) * (MINUTES_PER_HOUR as int) + (minute as int)) * (SECONDS_PER_MINUTE as int) + (second as int)) * (MILLISECONDS_PER_SECOND as int) + (millisecond as int)
   }
 
   // Convert total milliseconds back to time components
-  function MillisecondsToTime(millis: int): (int, int, int, int)
-    requires 0 <= millis < MILLISECONDS_PER_DAY
+  function MillisecondsToTime(millis: int): (uint8, uint8, uint8, uint16)
+    requires 0 <= millis < (MILLISECONDS_PER_DAY as int)
     ensures var (h, m, s, ms) := MillisecondsToTime(millis);
             0 <= h < HOURS_PER_DAY && 0 <= m < MINUTES_PER_HOUR &&
             0 <= s < SECONDS_PER_MINUTE && 0 <= ms < MILLISECONDS_PER_SECOND
   {
-    var totalSeconds := millis / MILLISECONDS_PER_SECOND;
-    var ms := millis % MILLISECONDS_PER_SECOND;
-    var totalMinutes := totalSeconds / SECONDS_PER_MINUTE;
-    var s := totalSeconds % SECONDS_PER_MINUTE;
-    var h := totalMinutes / MINUTES_PER_HOUR;
-    var m := totalMinutes % MINUTES_PER_HOUR;
-    (h, m, s, ms)
+    var totalSeconds := millis / (MILLISECONDS_PER_SECOND as int);
+    var ms := millis % (MILLISECONDS_PER_SECOND as int);
+    var totalMinutes := totalSeconds / (SECONDS_PER_MINUTE as int);
+    var s := totalSeconds % (SECONDS_PER_MINUTE as int);
+    var h := totalMinutes / (MINUTES_PER_HOUR as int);
+    var m := totalMinutes % (MINUTES_PER_HOUR as int);
+    (h as uint8, m as uint8, s as uint8, ms as uint16)
   }
 
   // Helper function for padding numbers with zeros
@@ -112,14 +113,14 @@ module DateTimeUtils {
   }
 
   // Generate detailed error messages for validation failures
-  function GetValidationError(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): string
+  function GetValidationError(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): string
   {
-    if month < 1 || month > 12 then "Invalid month: " + OfInt(month) + " (must be 1-12)"
-    else if day < 1 || day > DaysInMonth(year, month) then "Invalid day: " + OfInt(day) + " for " + GetMonthName(month) + " " + OfInt(year) + " (max: " + OfInt(DaysInMonth(year, month)) + ")"
-    else if hour < 0 || hour >= HOURS_PER_DAY then "Invalid hour: " + OfInt(hour) + " (must be 0-23)"
-    else if minute < 0 || minute >= MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute) + " (must be 0-59)"
-    else if second < 0 || second >= SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second) + " (must be 0-59)"
-    else if millisecond < 0 || millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + OfInt(millisecond) + " (must be 0-999)"
+    if month < 1 || month > 12 then "Invalid month: " + OfInt(month as int) + " (must be 1-12)"
+    else if day < 1 || day > (DaysInMonth(year as int, month as int) as uint8) then "Invalid day: " + OfInt(day as int) + " for " + GetMonthName(month as int) + " " + OfInt(year as int) + " (max: " + OfInt(DaysInMonth(year as int, month as int)) + ")"
+    else if hour >= HOURS_PER_DAY then "Invalid hour: " + OfInt(hour as int) + " (must be 0-23)"
+    else if minute >= MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute as int) + " (must be 0-59)"
+    else if second >= SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second as int) + " (must be 0-59)"
+    else if millisecond >= MILLISECONDS_PER_SECOND then "Invalid millisecond: " + OfInt(millisecond as int) + " (must be 0-999)"
     else "Invalid date/time"
   }
 

@@ -3,10 +3,11 @@ include "DateTimeConstant.dfy"
 module Duration {
   import opened DateTimeConstant
   import opened Std.Strings
+  import opened Std.BoundedInts
  // import DTUtils = DateTimeUtils
   datatype Duration = Duration(
-    seconds: int,   // 0 <= seconds < 9999year * seconds per day
-    millis: int     // 0 <= millis < 1000
+    seconds: uint64,   // 0 <= seconds < 9999year * seconds per day
+    millis: uint16     // 0 <= millis < 1000
   )
 
  function EpochDifference(epoch1: int, epoch2: int): Duration
@@ -17,10 +18,10 @@ module Duration {
       var diff := if epoch1 >= epoch2 then epoch1 - epoch2 else epoch2 - epoch1;
 
       // break into seconds and remaining millis
-      var secs  := diff / MILLISECONDS_PER_SECOND;
-      var remMs := diff % MILLISECONDS_PER_SECOND;
+      var secs  := diff / (MILLISECONDS_PER_SECOND as int);
+      var remMs := diff % (MILLISECONDS_PER_SECOND as int);
 
-      Duration(secs, remMs)
+      Duration(secs as uint64, remMs as uint16)
     }
     /*
   predicate IsValid(d: Duration) {
@@ -31,8 +32,8 @@ module Duration {
   // Total duration in milliseconds
   function ToTotalMilliseconds(d: Duration): int
   {
-    d.seconds * MILLISECONDS_PER_SECOND +
-    d.millis
+    (d.seconds as int) * (MILLISECONDS_PER_SECOND as int) +
+    (d.millis as int)
   }
 
     // Build Duration from milliseconds
@@ -40,10 +41,10 @@ module Duration {
  //     ensures IsValid(FromMilliseconds(ms))
     {
 
-      var seconds := ms / MILLISECONDS_PER_SECOND;
-      var milliseconds := ms % MILLISECONDS_PER_SECOND;
+      var seconds := ms / (MILLISECONDS_PER_SECOND as int);
+      var milliseconds := ms % (MILLISECONDS_PER_SECOND as int);
 
-      Duration(seconds, milliseconds)
+      Duration(seconds as uint64, milliseconds as uint16)
     }
   // Equality
   function Equal(d1: Duration, d2: Duration): bool
@@ -76,8 +77,8 @@ module Duration {
   {
     FromMilliseconds(ToTotalMilliseconds(d1) - ToTotalMilliseconds(d2))
   }
-  function GetSeconds(d: Duration): int { d.seconds }
-  function GetMilliseconds(d: Duration): int { d.millis }
+  function GetSeconds(d: Duration): uint64 { d.seconds }
+  function GetMilliseconds(d: Duration): uint16 { d.millis }
 
   // Check if one duration is strictly less than another
   function Less(d1: Duration, d2: Duration): bool
@@ -156,25 +157,25 @@ function Mod(d1: Duration, d2: Duration): Duration
 function ToTotalSeconds(d: Duration): int
 //  requires IsValid(d)
 {
-  d.seconds + d.millis / MILLISECONDS_PER_SECOND
+  (d.seconds as int) + (d.millis as int) / (MILLISECONDS_PER_SECOND as int)
 }
 
 function ToTotalMinutes(d: Duration): int
 //  requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_MINUTE
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_MINUTE as int)
 }
 
 function ToTotalHours(d: Duration): int
  // requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_HOUR
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_HOUR as int)
 }
 
 function ToTotalDays(d: Duration): int
  // requires IsValid(d)
 {
-  ToTotalMilliseconds(d) / MILLISECONDS_PER_DAY
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_DAY as int)
 }
 
 
@@ -182,34 +183,34 @@ function ToTotalDays(d: Duration): int
 function FromSeconds(s: int): Duration
  // ensures IsValid(FromSeconds(s))
 {
-  FromMilliseconds(s * MILLISECONDS_PER_SECOND)
+  FromMilliseconds(s * (MILLISECONDS_PER_SECOND as int))
 }
 
 function FromMinutes(m: int): Duration
  // ensures IsValid(FromMinutes(m))
 {
-  FromMilliseconds(m *  MILLISECONDS_PER_MINUTE)
+  FromMilliseconds(m * (MILLISECONDS_PER_MINUTE as int))
 }
 
 function FromHours(h: int): Duration
  // ensures IsValid(FromHours(h))
 {
-  FromMilliseconds(h * MILLISECONDS_PER_HOUR)
+  FromMilliseconds(h * (MILLISECONDS_PER_HOUR as int))
 }
 
 function FromDays(d: int): Duration
  // ensures IsValid(FromDays(d))
 {
-  FromMilliseconds(d * MILLISECONDS_PER_DAY)
+  FromMilliseconds(d * (MILLISECONDS_PER_DAY as int))
 }
 
 //PT9605H30M Simplified Parsing to Hours and Minutes
 function ToString(d: Duration): string
     requires d.seconds >= 0 && d.millis >= 0 && d.millis < 1000
   {
-    var total_seconds := d.seconds;
-    var hours := total_seconds / SECONDS_PER_HOUR;
-    var minutes := (total_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
+    var total_seconds := d.seconds as int;
+    var hours := total_seconds / (SECONDS_PER_HOUR as int);
+    var minutes := (total_seconds % (SECONDS_PER_HOUR as int)) / (SECONDS_PER_MINUTE as int);
     "PT" + OfInt(hours) + "H" + OfInt(minutes) + "M"
   }
 //PT9650H30M45.123S s: seq<char>
@@ -266,8 +267,8 @@ function ParseString(text: string): Duration
   var millisecond := ToInt(millisecondStr);
 
   // Compute total seconds and construct duration
-  var totalSeconds := hour * SECONDS_PER_HOUR + minute * SECONDS_PER_MINUTE + second;
-  Duration(totalSeconds, millisecond)
+  var totalSeconds := hour * (SECONDS_PER_HOUR as int) + minute * (SECONDS_PER_MINUTE as int) + second;
+  Duration(totalSeconds as uint64, millisecond as uint16)
 }
 
 function ParseStringVerified(text: string): Duration
@@ -275,7 +276,7 @@ function ParseStringVerified(text: string): Duration
   ensures ParseString(text).millis == 123
   ensures 0 <= ParseString(text).millis < 1000
 {
-  Duration(9650 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE + 45, 123)
+  Duration((9650 * (SECONDS_PER_HOUR as int) + 30 * (SECONDS_PER_MINUTE as int) + 45) as uint64, 123 as uint16)
 }
 //build command: dafny build TestDuration.dfy --standard-libraries
  }
