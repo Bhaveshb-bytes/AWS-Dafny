@@ -9,6 +9,15 @@ module LocalDateTime {
   import Duration
   import DTUtils = DateTimeUtils
 
+  // Supported date format patterns
+  datatype DateFormat = 
+    | ISO8601                    // yyyy-MM-ddTHH:mm:ss.fff
+    | DateOnly                   // yyyy-MM-dd
+    | TimeOnly                   // HH:mm:ss
+    | DateTimeSpace              // yyyy-MM-dd HH:mm:ss
+    | DateSlashDDMMYYYY         // dd/MM/yyyy
+    | DateSlashMMDDYYYY         // MM/dd/yyyy
+
   // LocalDateTime: represents date-time without time zone information
   datatype LocalDateTime = LocalDateTime(
     year: int,
@@ -348,22 +357,37 @@ module LocalDateTime {
     DTUtils.PadWithZeros(dt.millisecond, 3)
   }
 
-  function Format(dt: LocalDateTime, pattern: string): string
+  // Type-safe format function using DateFormat datatype
+  function Format(dt: LocalDateTime, format: DateFormat): string
     requires IsValidLocalDateTime(dt)
   {
-    if pattern == "yyyy-MM-dd" then
-      OfInt(dt.year) + "-" + DTUtils.PadWithZeros(dt.month, 2) + "-" + DTUtils.PadWithZeros(dt.day, 2)
+    match format
+      case ISO8601 => ToString(dt)
+      case DateOnly => OfInt(dt.year) + "-" + DTUtils.PadWithZeros(dt.month, 2) + "-" + DTUtils.PadWithZeros(dt.day, 2)
+      case TimeOnly => DTUtils.PadWithZeros(dt.hour, 2) + ":" + DTUtils.PadWithZeros(dt.minute, 2) + ":" + DTUtils.PadWithZeros(dt.second, 2)
+      case DateTimeSpace => OfInt(dt.year) + "-" + DTUtils.PadWithZeros(dt.month, 2) + "-" + DTUtils.PadWithZeros(dt.day, 2) + " " +
+                           DTUtils.PadWithZeros(dt.hour, 2) + ":" + DTUtils.PadWithZeros(dt.minute, 2) + ":" + DTUtils.PadWithZeros(dt.second, 2)
+      case DateSlashDDMMYYYY => DTUtils.PadWithZeros(dt.day, 2) + "/" + DTUtils.PadWithZeros(dt.month, 2) + "/" + OfInt(dt.year)
+      case DateSlashMMDDYYYY => DTUtils.PadWithZeros(dt.month, 2) + "/" + DTUtils.PadWithZeros(dt.day, 2) + "/" + OfInt(dt.year)
+  }
+
+  // String-based format function that returns Result for backwards compatibility
+  function FormatString(dt: LocalDateTime, pattern: string): Result<string, string>
+    requires IsValidLocalDateTime(dt)
+  {
+    if pattern == "yyyy-MM-ddTHH:mm:ss.fff" then
+      Success(Format(dt, ISO8601))
+    else if pattern == "yyyy-MM-dd" then
+      Success(Format(dt, DateOnly))
     else if pattern == "HH:mm:ss" then
-      DTUtils.PadWithZeros(dt.hour, 2) + ":" + DTUtils.PadWithZeros(dt.minute, 2) + ":" + DTUtils.PadWithZeros(dt.second, 2)
+      Success(Format(dt, TimeOnly))
     else if pattern == "yyyy-MM-dd HH:mm:ss" then
-      OfInt(dt.year) + "-" + DTUtils.PadWithZeros(dt.month, 2) + "-" + DTUtils.PadWithZeros(dt.day, 2) + " " +
-      DTUtils.PadWithZeros(dt.hour, 2) + ":" + DTUtils.PadWithZeros(dt.minute, 2) + ":" + DTUtils.PadWithZeros(dt.second, 2)
+      Success(Format(dt, DateTimeSpace))
     else if pattern == "dd/MM/yyyy" then
-      DTUtils.PadWithZeros(dt.day, 2) + "/" + DTUtils.PadWithZeros(dt.month, 2) + "/" + OfInt(dt.year)
+      Success(Format(dt, DateSlashDDMMYYYY))
     else if pattern == "MM/dd/yyyy" then
-      DTUtils.PadWithZeros(dt.month, 2) + "/" + DTUtils.PadWithZeros(dt.day, 2) + "/" + OfInt(dt.year)
+      Success(Format(dt, DateSlashMMDDYYYY))
     else
-      // Default to ISO 8601 format, yyyy-MM-ddTHH:mm:ss.fff
-      ToString(dt)
+      Failure("Unsupported format pattern: " + pattern)
   }
 }

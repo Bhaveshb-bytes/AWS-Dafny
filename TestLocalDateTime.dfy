@@ -142,16 +142,47 @@ module TestLocalDateTime {
     var isoStr := LDT.ToString(dt);
     assert isoStr == "2023-06-15T14:30:45.123";
 
-    // Test different format patterns
-    var dateOnly := LDT.Format(dt, "yyyy-MM-dd");
+    // Test type-safe Format function with DateFormat datatype
+    var isoFormat := LDT.Format(dt, LDT.ISO8601);
+    assert isoFormat == "2023-06-15T14:30:45.123";
+
+    var dateOnly := LDT.Format(dt, LDT.DateOnly);
     assert dateOnly == "2023-06-15";
 
-    var timeOnly := LDT.Format(dt, "HH:mm:ss");
+    var timeOnly := LDT.Format(dt, LDT.TimeOnly);
     assert timeOnly == "14:30:45";
 
-    // Test that unknown patterns default to ISO format
-    var unknownPattern := LDT.Format(dt, "custom");
-    assert unknownPattern == isoStr;
+    var dateTimeSpace := LDT.Format(dt, LDT.DateTimeSpace);
+    assert dateTimeSpace == "2023-06-15 14:30:45";
+
+    var ddmmyyyy := LDT.Format(dt, LDT.DateSlashDDMMYYYY);
+    assert ddmmyyyy == "15/06/2023";
+
+    var mmddyyyy := LDT.Format(dt, LDT.DateSlashMMDDYYYY);
+    assert mmddyyyy == "06/15/2023";
+
+    // Test string-based FormatString function with Result handling
+    var validDateOnlyResult := LDT.FormatString(dt, "yyyy-MM-dd");
+    assert validDateOnlyResult.Success?;
+    assert validDateOnlyResult.value == "2023-06-15";
+
+    var validTimeOnlyResult := LDT.FormatString(dt, "HH:mm:ss");
+    assert validTimeOnlyResult.Success?;
+    assert validTimeOnlyResult.value == "14:30:45";
+
+    var validISOResult := LDT.FormatString(dt, "yyyy-MM-ddTHH:mm:ss.fff");
+    assert validISOResult.Success?;
+    assert validISOResult.value == "2023-06-15T14:30:45.123";
+
+    // Test that unsupported patterns return Failure
+    var unsupportedResult1 := LDT.FormatString(dt, "yyyy/MM/dd");
+    assert unsupportedResult1.Failure?;
+
+    var unsupportedResult2 := LDT.FormatString(dt, "custom");
+    assert unsupportedResult2.Failure?;
+
+    var unsupportedResult3 := LDT.FormatString(dt, "dd-MM-yyyy");
+    assert unsupportedResult3.Failure?;
   }
 
 
