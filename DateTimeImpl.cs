@@ -5,21 +5,21 @@ using Dafny;
 
 public static class DateTimeImpl
 {
-    public static ISequence<BigInteger> GetNowComponents()
+    public static ISequence<uint> GetNowComponents()
     {
         var now = DateTime.Now;
-        var components = new BigInteger[]
+        var components = new uint[]
         {
-            now.Year,
-            now.Month,
-            now.Day,
-            now.Hour,
-            now.Minute,
-            now.Second,
-            now.Millisecond,
+            (uint)now.Year,
+            (uint)now.Month,
+            (uint)now.Day,
+            (uint)now.Hour,
+            (uint)now.Minute,
+            (uint)now.Second,
+            (uint)now.Millisecond,
         };
 
-        return Sequence<BigInteger>.FromArray(components);
+        return Sequence<uint>.FromArray(components);
     }
 
     public static BigInteger ToEpochTimeMilliseconds(

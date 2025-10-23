@@ -52,15 +52,22 @@ module LocalDateTime {
   }
 
   function FromIntComponents(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): LocalDateTime
-    requires 1 <= year <= 65535 && 1 <= month <= 255 && 1 <= day <= 255 
+    requires 0 <= year <= 65535 && 0 <= month <= 255 && 0 <= day <= 255 
     requires 0 <= hour <= 255 && 0 <= minute <= 255 && 0 <= second <= 255 && 0 <= millisecond <= 65535
   {
     LocalDateTime(year as uint16, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16)
   }
 
+  // Direct construction from uint components (more type-safe)
+  function FromUintComponents(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): LocalDateTime
+    requires DTUtils.IsValidDateTime(year, month, day, hour, minute, second, millisecond)
+  {
+    LocalDateTime(year, month, day, hour, minute, second, millisecond)
+  }
+
   // Modification functions
   function WithYear(dt: LocalDateTime, newYear: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
+    requires IsValidLocalDateTime(dt) && 0 <= newYear <= 65535
     ensures IsValidLocalDateTime(WithYear(dt, newYear))
   {
     var newDay := DTUtils.ClampDay(newYear as int, dt.month as int, dt.day as int);
@@ -120,11 +127,14 @@ module LocalDateTime {
     var epochMillis := DTUtils.ToEpochTimeMillisecondsFunc(year, month, day, hour, minute, second, millisecond);
     var newEpochMillis := epochMillis + millisToAdd;
     var components := DTUtils.FromEpochTimeMillisecondsFunc(newEpochMillis);
-    FromIntComponents(components[0], components[1], components[2], components[3], components[4], components[5], components[6])
+    // FromEpochTimeMillisecondsFunc ensures components are in valid range
+    assert DTUtils.IsValidDateTime(components[0] as uint16, components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16);
+    FromUintComponents(components[0] as uint16, components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
   }
 
   function PlusYears(dt: LocalDateTime, years: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
+    requires var (year, _, _, _, _, _, _) := ToIntComponents(dt); 0 <= year + years <= 65535
     ensures IsValidLocalDateTime(PlusYears(dt, years))
   {
     var (year, month, day, hour, minute, second, millisecond) := ToIntComponents(dt);
@@ -135,6 +145,11 @@ module LocalDateTime {
 
   function PlusMonths(dt: LocalDateTime, months: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
+    requires var (year, month, _, _, _, _, _) := ToIntComponents(dt); 
+             var totalMonths := month + months;
+             var newYear := year + (totalMonths - 1) / 12;
+             var newMonth := ((totalMonths - 1) % 12) + 1;
+             0 <= newYear <= 65535 && 1 <= newMonth <= 12
     ensures IsValidLocalDateTime(PlusMonths(dt, months))
   {
     var (year, month, day, hour, minute, second, millisecond) := ToIntComponents(dt);
@@ -294,17 +309,17 @@ module LocalDateTime {
   {
     var components := DTUtils.GetNowComponentsFunc();
     if |components| == 7 then
-      var year := components[0] as int;
-      var month := components[1] as int;
-      var day := components[2] as int;
-      var hour := components[3] as int;
-      var minute := components[4] as int;
-      var second := components[5] as int;
-      var millisecond := components[6] as int;
-
-      var dt := FromIntComponents(year, month, day, hour, minute, second, millisecond);
-      if IsValidLocalDateTime(dt) then
-        Success(dt)
+      // Components are already uint32, safe to convert to specific uint types
+      var year := components[0] as uint16;
+      var month := components[1] as uint8;
+      var day := components[2] as uint8;
+      var hour := components[3] as uint8;
+      var minute := components[4] as uint8;
+      var second := components[5] as uint8;
+      var millisecond := components[6] as uint16;
+      
+      if DTUtils.IsValidDateTime(year, month, day, hour, minute, second, millisecond) then
+        Success(FromUintComponents(year, month, day, hour, minute, second, millisecond))
       else
         Failure("Current time components are invalid")
     else
