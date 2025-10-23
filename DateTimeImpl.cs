@@ -55,7 +55,7 @@ public static class DateTimeImpl
             .ToOffset(offset ?? TimeSpan.Zero);
         var components = new int[]
         {
-            dateTimeOffset.Year,      // Can be negative for BC years
+            dateTimeOffset.Year,
             dateTimeOffset.Month,
             dateTimeOffset.Day,
             dateTimeOffset.Hour,
