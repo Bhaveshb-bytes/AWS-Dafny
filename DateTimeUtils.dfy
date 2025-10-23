@@ -11,12 +11,14 @@ module DateTimeUtils {
 
   // Function versions for use in function contexts
   function {:extern "DateTimeImpl", "ToEpochTimeMilliseconds"}
-    {:axiom} ToEpochTimeMillisecondsFunc(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): int
+    {:axiom} ToEpochTimeMillisecondsFunc(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): int
 
   function {:extern "DateTimeImpl", "FromEpochTimeMilliseconds"}
-    {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int>
+    {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<uint32>
     ensures |FromEpochTimeMillisecondsFunc(epochMillis)| == 7
     ensures var components := FromEpochTimeMillisecondsFunc(epochMillis);
+            components[0] <= 65535 && components[1] <= 255 && components[2] <= 255 &&
+            components[3] <= 255 && components[4] <= 255 && components[5] <= 255 && components[6] <= 65535 &&
             IsValidDateTime(components[0] as uint16, components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
 
   // External function for getting current time components

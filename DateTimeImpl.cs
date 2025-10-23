@@ -23,13 +23,13 @@ public static class DateTimeImpl
     }
 
     public static BigInteger ToEpochTimeMilliseconds(
-        BigInteger year,
-        BigInteger month,
-        BigInteger day,
-        BigInteger hour,
-        BigInteger minute,
-        BigInteger second,
-        BigInteger millisecond,
+        uint year,
+        uint month,
+        uint day,
+        uint hour,
+        uint minute,
+        uint second,
+        uint millisecond,
         TimeSpan? offset = null
     )
     {
@@ -45,7 +45,7 @@ public static class DateTimeImpl
         ).ToUnixTimeMilliseconds();
     }
 
-    public static ISequence<BigInteger> FromEpochTimeMilliseconds(
+    public static ISequence<uint> FromEpochTimeMilliseconds(
         BigInteger epochMilliseconds,
         TimeSpan? offset = null
     )
@@ -53,17 +53,17 @@ public static class DateTimeImpl
         DateTimeOffset dateTimeOffset = DateTimeOffset
             .FromUnixTimeMilliseconds((long)epochMilliseconds)
             .ToOffset(offset ?? TimeSpan.Zero);
-        var components = new BigInteger[]
+        var components = new uint[]
         {
-            dateTimeOffset.Year,
-            dateTimeOffset.Month,
-            dateTimeOffset.Day,
-            dateTimeOffset.Hour,
-            dateTimeOffset.Minute,
-            dateTimeOffset.Second,
-            dateTimeOffset.Millisecond,
+            (uint)dateTimeOffset.Year,
+            (uint)dateTimeOffset.Month,
+            (uint)dateTimeOffset.Day,
+            (uint)dateTimeOffset.Hour,
+            (uint)dateTimeOffset.Minute,
+            (uint)dateTimeOffset.Second,
+            (uint)dateTimeOffset.Millisecond,
         };
-        return Sequence<BigInteger>.FromArray(components);
+        return Sequence<uint>.FromArray(components);
     }
 
     public static bool IsLeapYear(BigInteger year)

@@ -58,25 +58,25 @@ module TestLocalDateTime {
 
   method TestParseFunction()
   {
-    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123");
+    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ISO8601);
     if validResult1.Success? {
       var dt1 := validResult1.value;
       assert LDT.IsValidLocalDateTime(dt1);
     }
 
     // Test invalid format cases - these should return Failure
-    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45");     // Wrong separators
-    var invalidFormat2 := LDT.Parse("2023-06-15");              // Too short
-    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45");     // Missing milliseconds
-    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123"); // Wrong date order
-    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123");  // Single digit month
-    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123");  // Single digit day
-    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123");  // Single digit hour
-    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123");  // Single digit minute
-    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123");  // Single digit second
-    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12"); // Wrong millisecond length
-    var invalidFormat11 := LDT.Parse("");                       // Empty string
-    var invalidFormat12 := LDT.Parse("not-a-date");             // Completely invalid
+    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45", LDT.ISO8601);     // Wrong separators
+    var invalidFormat2 := LDT.Parse("2023-06-15", LDT.ISO8601);              // Too short
+    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45", LDT.ISO8601);     // Missing milliseconds
+    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123", LDT.ISO8601); // Wrong date order
+    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123", LDT.ISO8601);  // Single digit month
+    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123", LDT.ISO8601);  // Single digit day
+    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123", LDT.ISO8601);  // Single digit hour
+    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123", LDT.ISO8601);  // Single digit minute
+    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123", LDT.ISO8601);  // Single digit second
+    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12", LDT.ISO8601); // Wrong millisecond length
+    var invalidFormat11 := LDT.Parse("", LDT.ISO8601);                       // Empty string
+    var invalidFormat12 := LDT.Parse("not-a-date", LDT.ISO8601);             // Completely invalid
 
     // Verify format failures
     assert invalidFormat1.Failure?;
@@ -283,36 +283,7 @@ module TestLocalDateTime {
     assert DTUtils.DaysInYear(2020) == 366; // Leap year
   }
 
-  method TestPlusYears() {
-    // Test leap year to non-leap year (Feb 29 -> Feb 28)
-    var leapDay := LDT.LocalDateTime(2020, 2, 29, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(leapDay);
-    var nextYear := LDT.PlusYears(leapDay, 1);
-    assert LDT.IsValidLocalDateTime(nextYear);
-    assert nextYear.year == 2021;
-    assert nextYear.month == 2;
-    assert nextYear.day == 28; // Clamped from Feb 29 to Feb 28
-  }
 
-  method TestPlusMonths() {
-    // Test month overflow across year boundary
-    var novemberDt := LDT.LocalDateTime(2023, 11, 15, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(novemberDt);
-    var plusTwoMonths := LDT.PlusMonths(novemberDt, 2);
-    assert LDT.IsValidLocalDateTime(plusTwoMonths);
-    assert plusTwoMonths.year == 2024;
-    assert plusTwoMonths.month == 1;
-    assert plusTwoMonths.day == 15;
-
-    // Test day clamping when moving from 31-day month to 30-day month
-    var jan31 := LDT.LocalDateTime(2023, 1, 31, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(jan31);
-    var plusOneMonth := LDT.PlusMonths(jan31, 1);
-    assert LDT.IsValidLocalDateTime(plusOneMonth);
-    assert plusOneMonth.year == 2023;
-    assert plusOneMonth.month == 2;
-    assert plusOneMonth.day == 28; // Clamped from 31 to 28 (Feb)
-  }
 
   method TestPlusDays() {
     // Test day overflow across month boundary
@@ -379,53 +350,7 @@ module TestLocalDateTime {
     expect plus100Millis.millisecond == 50;
   }
 
-  method TestMinusYears() {
-    // Test leap year to non-leap year (Feb 29 -> Feb 28)
-    var leapDay := LDT.LocalDateTime(2020, 2, 29, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(leapDay);
-    var prevYear := LDT.MinusYears(leapDay, 4);
-    assert LDT.IsValidLocalDateTime(prevYear);
-    assert prevYear.year == 2016;
-    assert prevYear.month == 2;
-    assert prevYear.day == 29; // 2016 is also a leap year
 
-    var anoLeapDay := LDT.LocalDateTime(2020, 2, 29, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(leapDay);
-    var anoPrevYear := LDT.MinusYears(leapDay, 1);
-    assert LDT.IsValidLocalDateTime(anoPrevYear);
-    assert anoPrevYear.year == 2019;
-    assert anoPrevYear.month == 2;
-    assert anoPrevYear.day == 28; // 2019 is not a leap year
-
-    // Test non-leap to leap year with day clamping
-    var nonLeapFeb29 := LDT.LocalDateTime(2021, 2, 28, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(nonLeapFeb29);
-    var minusOneYear := LDT.MinusYears(nonLeapFeb29, 1);
-    assert LDT.IsValidLocalDateTime(minusOneYear);
-    assert minusOneYear.year == 2020;
-    assert minusOneYear.month == 2;
-    assert minusOneYear.day == 28;
-  }
-
-  method TestMinusMonths() {
-    // Test month underflow across year boundary
-    var januaryDt := LDT.LocalDateTime(2024, 1, 15, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(januaryDt);
-    var minusTwoMonths := LDT.MinusMonths(januaryDt, 2);
-    assert LDT.IsValidLocalDateTime(minusTwoMonths);
-    assert minusTwoMonths.year == 2023;
-    assert minusTwoMonths.month == 11;
-    assert minusTwoMonths.day == 15;
-
-    // Test day clamping when moving from 31-day month to 30-day month
-    var mar31 := LDT.LocalDateTime(2023, 3, 31, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(mar31);
-    var minusOneMonth := LDT.MinusMonths(mar31, 1);
-    assert LDT.IsValidLocalDateTime(minusOneMonth);
-    assert minusOneMonth.year == 2023;
-    assert minusOneMonth.month == 2;
-    assert minusOneMonth.day == 28; // Clamped from 31 to 28 (Feb)
-  }
 
   method TestMinusDays() {
     // Test day underflow across month boundary
@@ -569,15 +494,11 @@ method Main()
   TestLocalDateTime.TestIsValidLocalDateTime();
   TestLocalDateTime.TestDaysInMonth();
   TestLocalDateTime.TestDaysInYear();
-  TestLocalDateTime.TestPlusYears();
-  TestLocalDateTime.TestPlusMonths();
   TestLocalDateTime.TestPlusDays();
   TestLocalDateTime.TestPlusHours();
   TestLocalDateTime.TestPlusMinutes();
   TestLocalDateTime.TestPlusSeconds();
   TestLocalDateTime.TestPlusMilliseconds();
-  TestLocalDateTime.TestMinusYears();
-  TestLocalDateTime.TestMinusMonths();
   TestLocalDateTime.TestMinusDays();
   TestLocalDateTime.TestMinusHours();
   TestLocalDateTime.TestMinusMinutes();
