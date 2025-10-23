@@ -163,9 +163,15 @@ module LocalDateTime {
     Plus(dt, milliseconds)
   }
 
+  function PlusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
+    requires IsValidLocalDateTime(dt)
+    ensures IsValidLocalDateTime(PlusDuration(dt, duration))
+  {
+    var totalMillis := (duration.seconds as int) * (MILLISECONDS_PER_SECOND as int) + (duration.millis as int);
+    Plus(dt, totalMillis)
+  }
+
   // Minus methods
-
-
   function MinusDays(dt: LocalDateTime, days: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(MinusDays(dt, days))
@@ -199,15 +205,6 @@ module LocalDateTime {
     ensures IsValidLocalDateTime(MinusMilliseconds(dt, milliseconds))
   {
     PlusMilliseconds(dt, -milliseconds)
-  }
-
-  // Arithmetic functions with Duration
-  function PlusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(PlusDuration(dt, duration))
-  {
-    var totalMillis := (duration.seconds as int) * (MILLISECONDS_PER_SECOND as int) + (duration.millis as int);
-    Plus(dt, totalMillis)
   }
 
   function MinusDuration(dt: LocalDateTime, duration: Duration.Duration): LocalDateTime
@@ -265,14 +262,11 @@ module LocalDateTime {
   {
     var components := DTUtils.GetNowComponentsFunc();
     if |components| == 7 &&
-       MIN_YEAR <= components[0] <= MAX_YEAR && 0 <= components[1] <= 255 && 0 <= components[2] <= 255 &&
-       0 <= components[3] <= 255 && 0 <= components[4] <= 255 && 0 <= components[5] <= 255 && 0 <= components[6] <= 65535 &&
        DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16) then
       Success(FromSequenceComponents(components))
     else
       Failure("Failed to get current time components")
   }
-
 
   // Creation functions
   function Of(year: int32, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): Result<LocalDateTime, string>
@@ -280,17 +274,16 @@ module LocalDateTime {
     if MIN_YEAR <= year <= MAX_YEAR && month >= 0 && month <= 255 && day >= 0 && day <= 255 &&
        hour >= 0 && hour <= 255 && minute >= 0 && minute <= 255 && second >= 0 && second <= 255 &&
        millisecond >= 0 && millisecond <= 65535 then
-      var yearU := year;
       var monthU := month as uint8;
       var dayU := day as uint8;
       var hourU := hour as uint8;
       var minuteU := minute as uint8;
       var secondU := second as uint8;
       var millisecondU := millisecond as uint16;
-      if DTUtils.IsValidDateTime(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU) then
-        Success(FromComponents(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU))
+      if DTUtils.IsValidDateTime(year, monthU, dayU, hourU, minuteU, secondU, millisecondU) then
+        Success(FromComponents(year, monthU, dayU, hourU, minuteU, secondU, millisecondU))
       else
-        var error := DTUtils.GetValidationError(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU);
+        var error := DTUtils.GetValidationError(year, monthU, dayU, hourU, minuteU, secondU, millisecondU);
         Failure(error)
     else
       Failure("Parameters out of range for bounded integers")
