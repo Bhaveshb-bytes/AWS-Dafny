@@ -5,25 +5,25 @@ using Dafny;
 
 public static class DateTimeImpl
 {
-    public static ISequence<uint> GetNowComponents()
+    public static ISequence<int> GetNowComponents()
     {
         var now = DateTime.Now;
-        var components = new uint[]
+        var components = new int[]
         {
-            (uint)now.Year,
-            (uint)now.Month,
-            (uint)now.Day,
-            (uint)now.Hour,
-            (uint)now.Minute,
-            (uint)now.Second,
-            (uint)now.Millisecond,
+            now.Year,
+            now.Month,
+            now.Day,
+            now.Hour,
+            now.Minute,
+            now.Second,
+            now.Millisecond,
         };
 
-        return Sequence<uint>.FromArray(components);
+        return Sequence<int>.FromArray(components);
     }
 
     public static BigInteger ToEpochTimeMilliseconds(
-        uint year,
+        int year,
         uint month,
         uint day,
         uint hour,
@@ -34,7 +34,7 @@ public static class DateTimeImpl
     )
     {
         return new DateTimeOffset(
-            (int)year,
+            year,
             (int)month,
             (int)day,
             (int)hour,
@@ -45,7 +45,7 @@ public static class DateTimeImpl
         ).ToUnixTimeMilliseconds();
     }
 
-    public static ISequence<uint> FromEpochTimeMilliseconds(
+    public static ISequence<int> FromEpochTimeMilliseconds(
         BigInteger epochMilliseconds,
         TimeSpan? offset = null
     )
@@ -53,17 +53,17 @@ public static class DateTimeImpl
         DateTimeOffset dateTimeOffset = DateTimeOffset
             .FromUnixTimeMilliseconds((long)epochMilliseconds)
             .ToOffset(offset ?? TimeSpan.Zero);
-        var components = new uint[]
+        var components = new int[]
         {
-            (uint)dateTimeOffset.Year,
-            (uint)dateTimeOffset.Month,
-            (uint)dateTimeOffset.Day,
-            (uint)dateTimeOffset.Hour,
-            (uint)dateTimeOffset.Minute,
-            (uint)dateTimeOffset.Second,
-            (uint)dateTimeOffset.Millisecond,
+            dateTimeOffset.Year,      // Can be negative for BC years
+            dateTimeOffset.Month,
+            dateTimeOffset.Day,
+            dateTimeOffset.Hour,
+            dateTimeOffset.Minute,
+            dateTimeOffset.Second,
+            dateTimeOffset.Millisecond,
         };
-        return Sequence<uint>.FromArray(components);
+        return Sequence<int>.FromArray(components);
     }
 
     public static bool IsLeapYear(BigInteger year)

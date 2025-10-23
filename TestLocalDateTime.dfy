@@ -3,6 +3,7 @@ include "Duration.dfy"
 include "DateTimeUtils.dfy"
 
 module TestLocalDateTime {
+  import opened Std.BoundedInts
   import LDT = LocalDateTime
   import Duration = Duration
   import DTUtils = DateTimeUtils
@@ -91,6 +92,52 @@ module TestLocalDateTime {
     assert invalidFormat10.Failure?;
     assert invalidFormat11.Failure?;
     assert invalidFormat12.Failure?;
+  }
+
+  method TestDateOnlyParsing()
+  {
+    // Test valid DateOnly parsing - simplified to avoid verification timeout
+    var validDateOnly1 := LDT.Parse("2023-06-15", LDT.DateOnly);
+    expect validDateOnly1.Success?;
+    if validDateOnly1.Success? {
+      var dt := validDateOnly1.value;
+      expect LDT.IsValidLocalDateTime(dt);
+    }
+
+    var validDateOnly2 := LDT.Parse("2024-02-29", LDT.DateOnly); // Leap year
+    expect validDateOnly2.Success?;
+
+    var validDateOnly3 := LDT.Parse("2000-12-31", LDT.DateOnly); // End of century leap year  
+    expect validDateOnly3.Success?;
+
+    // Test invalid DateOnly formats
+    var invalidDateOnly1 := LDT.Parse("2023/06/15", LDT.DateOnly);      // Wrong separators
+    var invalidDateOnly2 := LDT.Parse("2023-6-15", LDT.DateOnly);       // Single digit month
+    var invalidDateOnly3 := LDT.Parse("2023-06-5", LDT.DateOnly);       // Single digit day
+    var invalidDateOnly4 := LDT.Parse("23-06-15", LDT.DateOnly);        // Two digit year
+    var invalidDateOnly5 := LDT.Parse("2023-13-15", LDT.DateOnly);      // Invalid month
+    var invalidDateOnly6 := LDT.Parse("2023-02-30", LDT.DateOnly);      // Invalid day for February
+    var invalidDateOnly7 := LDT.Parse("2023-04-31", LDT.DateOnly);      // Invalid day for April
+    var invalidDateOnly8 := LDT.Parse("2023-06-15T14:30:45", LDT.DateOnly); // Too long
+    var invalidDateOnly9 := LDT.Parse("2023-06", LDT.DateOnly);         // Too short
+    var invalidDateOnly10 := LDT.Parse("", LDT.DateOnly);               // Empty string
+    var invalidDateOnly11 := LDT.Parse("not-a-date", LDT.DateOnly);     // Invalid format
+
+    // Verify DateOnly format failures
+    assert invalidDateOnly1.Failure?;
+    assert invalidDateOnly2.Failure?;
+    assert invalidDateOnly3.Failure?;
+    assert invalidDateOnly4.Failure?;
+    assert invalidDateOnly5.Failure?;
+    assert invalidDateOnly6.Failure?;
+    assert invalidDateOnly7.Failure?;
+    assert invalidDateOnly8.Failure?;
+    assert invalidDateOnly9.Failure?;
+    assert invalidDateOnly10.Failure?;
+    assert invalidDateOnly11.Failure?;
+
+    // Note: Parse function now only supports ISO8601 and DateOnly formats
+    // Other formats are not supported in the Parse function API
   }
 
   method TestCompareFunction()
@@ -484,6 +531,7 @@ method Main()
 {
   TestLocalDateTime.TestOfFunction();
   TestLocalDateTime.TestParseFunction();
+  TestLocalDateTime.TestDateOnlyParsing();
   TestLocalDateTime.TestCompareFunction();
   TestLocalDateTime.TestArithmeticFunctions();
   TestLocalDateTime.TestFormatFunction();
