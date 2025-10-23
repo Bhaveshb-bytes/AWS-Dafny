@@ -7,6 +7,10 @@ module DateTimeConstant {
   const HOURS_PER_DAY: uint8 := 24
   const DURATION_YEAR: uint16 := 9999
   const REGULAR_DAYS_PER_YEAR: uint16 := 365
+  
+  // Year range constants
+  const MIN_YEAR: int32 := -999999999
+  const MAX_YEAR: int32 := 999999999
 
   // Derived constants for performance
   const MILLISECONDS_PER_MINUTE: uint32 := (SECONDS_PER_MINUTE as uint32) * (MILLISECONDS_PER_SECOND as uint32)

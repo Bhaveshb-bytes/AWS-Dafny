@@ -11,27 +11,30 @@ module DateTimeUtils {
 
   // Function versions for use in function contexts
   function {:extern "DateTimeImpl", "ToEpochTimeMilliseconds"}
-    {:axiom} ToEpochTimeMillisecondsFunc(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): int
+    {:axiom} ToEpochTimeMillisecondsFunc(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): int
 
   function {:extern "DateTimeImpl", "FromEpochTimeMilliseconds"}
-    {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int>
+    {:axiom} FromEpochTimeMillisecondsFunc(epochMillis: int): seq<int32>
     ensures |FromEpochTimeMillisecondsFunc(epochMillis)| == 7
     ensures var components := FromEpochTimeMillisecondsFunc(epochMillis);
-            IsValidDateTime(components[0] as uint16, components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
+            IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
 
   // External function for getting current time components
   function {:extern "DateTimeImpl", "GetNowComponents"}
-    {:axiom} GetNowComponentsFunc(): seq<int>
+    {:axiom} GetNowComponentsFunc(): seq<int32>
     ensures |GetNowComponentsFunc()| == 7
+    ensures var components := GetNowComponentsFunc();
+            MIN_YEAR <= components[0] <= MAX_YEAR && // year as int32
+            forall i :: 1 <= i < |components| ==> 0 <= components[i] <= 65535
 
   // Leap year calculation
-  predicate IsLeapYear(year: int)
+  predicate IsLeapYear(year: int32)
   {
     (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)
   }
 
   // Days in month calculation
-  function DaysInMonth(year: int, month: int): int
+  function DaysInMonth(year: int32, month: uint8): uint8
     requires 1 <= month <= 12
   {
     if month == 2 then
@@ -41,23 +44,24 @@ module DateTimeUtils {
   }
 
   // Days in year calculation
-  function DaysInYear(year: int): int
+  function DaysInYear(year: int32): int
   {
     if IsLeapYear(year) then 366 else 365
   }
 
   // Month name getter
-  function GetMonthName(month: int): string
+  function GetMonthName(month: uint8): string
     requires 1 <= month <= 12
   {
     MONTH_NAMES[month - 1]
   }
 
   // Date-time validation predicate
-  predicate IsValidDateTime(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16)
+  predicate IsValidDateTime(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16)
   {
+    MIN_YEAR <= year <= MAX_YEAR &&
     1 <= month <= 12 &&
-    1 <= day <= (DaysInMonth(year as int, month as int) as uint8) &&
+    1 <= day <= (DaysInMonth(year, month) as uint8) &&
     0 <= hour < HOURS_PER_DAY &&
     0 <= minute < MINUTES_PER_HOUR &&
     0 <= second < SECONDS_PER_MINUTE &&
@@ -66,13 +70,13 @@ module DateTimeUtils {
 
 
   // Day of week calculation using Sakamoto's algorithm
-  function GetDayOfWeek(year: int, month: int, day: int): int
+  function GetDayOfWeek(year: int32, month: uint8, day: uint8): int32
     requires 1 <= month <= 12 && 1 <= day <= DaysInMonth(year, month)
   {
     // Returns 0=Sunday, 1=Monday, ..., 6=Saturday
     var t := [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
     var y := if month < 3 then year - 1 else year;
-    (y + y/4 - y/100 + y/400 + t[month-1] + day) % 7
+    (y + y/4 - y/100 + y/400 + t[month-1] + (day as int32)) % 7
   }
 
   // Convert time portion to total milliseconds since midnight
@@ -113,10 +117,10 @@ module DateTimeUtils {
   }
 
   // Generate detailed error messages for validation failures
-  function GetValidationError(year: uint16, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): string
+  function GetValidationError(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): string
   {
     if month < 1 || month > 12 then "Invalid month: " + OfInt(month as int) + " (must be 1-12)"
-    else if day < 1 || day > (DaysInMonth(year as int, month as int) as uint8) then "Invalid day: " + OfInt(day as int) + " for " + GetMonthName(month as int) + " " + OfInt(year as int) + " (max: " + OfInt(DaysInMonth(year as int, month as int)) + ")"
+    else if day < 1 || day > (DaysInMonth(year, month) as uint8) then "Invalid day: " + OfInt(day as int) + " for " + GetMonthName(month) + " " + OfInt(year as int) + " (max: " + OfInt(DaysInMonth(year, month) as int) + ")"
     else if hour >= HOURS_PER_DAY then "Invalid hour: " + OfInt(hour as int) + " (must be 0-23)"
     else if minute >= MINUTES_PER_HOUR then "Invalid minute: " + OfInt(minute as int) + " (must be 0-59)"
     else if second >= SECONDS_PER_MINUTE then "Invalid second: " + OfInt(second as int) + " (must be 0-59)"
@@ -125,13 +129,13 @@ module DateTimeUtils {
   }
 
   // Clamp day to valid range when changing year or month
-  function ClampDay(year: int, month: int, desiredDay: int): int
+  function ClampDay(year: int32, month: uint8, desiredDay: uint8): uint8
     requires 1 <= month <= 12
     requires desiredDay >= 1
     ensures 1 <= ClampDay(year, month, desiredDay) <= DaysInMonth(year, month)
     ensures desiredDay <= DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == desiredDay
     ensures desiredDay >  DaysInMonth(year, month) ==> ClampDay(year, month, desiredDay) == DaysInMonth(year, month)
   {
-    if desiredDay <= DaysInMonth(year, month) then desiredDay else DaysInMonth(year, month)
+    if desiredDay <= DaysInMonth(year, month) then desiredDay else DaysInMonth(year, month) as uint8
   }
 }

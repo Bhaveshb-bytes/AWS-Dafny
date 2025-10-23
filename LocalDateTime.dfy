@@ -16,12 +16,12 @@ module LocalDateTime {
     | DateOnly                   // yyyy-MM-dd
     | TimeOnly                   // HH:mm:ss
     | DateTimeSpace              // yyyy-MM-dd HH:mm:ss
-    | DateSlashDDMMYYYY         // dd/MM/yyyy
-    | DateSlashMMDDYYYY         // MM/dd/yyyy
+    | DateSlashDDMMYYYY          // dd/MM/yyyy
+    | DateSlashMMDDYYYY          // MM/dd/yyyy
 
   // LocalDateTime: represents date-time without time zone information
   datatype LocalDateTime = LocalDateTime(
-    year: uint16,
+    year: int32,
     month: uint8,
     day: uint8,
     hour: uint8,
@@ -37,7 +37,7 @@ module LocalDateTime {
   }
 
   // LocalDateTime getter functions (bounded integers for efficient storage)
-  function GetYear(dt: LocalDateTime): uint16 { dt.year }
+  function GetYear(dt: LocalDateTime): int32 { dt.year }
   function GetMonth(dt: LocalDateTime): uint8 { dt.month }
   function GetDay(dt: LocalDateTime): uint8 { dt.day }
   function GetHour(dt: LocalDateTime): uint8 { dt.hour }
@@ -51,63 +51,73 @@ module LocalDateTime {
     (dt.year as int, dt.month as int, dt.day as int, dt.hour as int, dt.minute as int, dt.second as int, dt.millisecond as int)
   }
 
-  function FromIntComponents(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): LocalDateTime
-    requires 1 <= year <= 65535 && 1 <= month <= 255 && 1 <= day <= 255 
-    requires 0 <= hour <= 255 && 0 <= minute <= 255 && 0 <= second <= 255 && 0 <= millisecond <= 65535
+
+  function FromUintComponents(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): LocalDateTime
+    requires DTUtils.IsValidDateTime(year, month, day, hour, minute, second, millisecond)
   {
-    LocalDateTime(year as uint16, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16)
+    LocalDateTime(year, month, day, hour, minute, second, millisecond)
+  }
+
+  function FromInt32Components(components: seq<int32>): LocalDateTime
+    requires |components| == 7
+    requires MIN_YEAR <= components[0] <= MAX_YEAR
+    requires 0 <= components[1] <= 255 && 0 <= components[2] <= 255
+    requires 0 <= components[3] <= 255 && 0 <= components[4] <= 255 && 0 <= components[5] <= 255 && 0 <= components[6] <= 65535
+    requires DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
+  {
+    FromUintComponents(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
   }
 
   // Modification functions
-  function WithYear(dt: LocalDateTime, newYear: int): LocalDateTime
+  function WithYear(dt: LocalDateTime, newYear: int32): LocalDateTime
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(WithYear(dt, newYear))
   {
-    var newDay := DTUtils.ClampDay(newYear as int, dt.month as int, dt.day as int);
-    FromIntComponents(newYear, dt.month as int, newDay, dt.hour as int, dt.minute as int, dt.second as int, dt.millisecond as int)
+    var newDay := DTUtils.ClampDay(newYear, dt.month, dt.day);
+    FromUintComponents(newYear, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
-  function WithMonth(dt: LocalDateTime, newMonth: int): LocalDateTime
+  function WithMonth(dt: LocalDateTime, newMonth: uint8): LocalDateTime
     requires IsValidLocalDateTime(dt) && 1 <= newMonth <= 12
     ensures IsValidLocalDateTime(WithMonth(dt, newMonth))
   {
-    var newDay := DTUtils.ClampDay(dt.year as int, newMonth as int, dt.day as int);
-    FromIntComponents(dt.year as int, newMonth, newDay, dt.hour as int, dt.minute as int, dt.second as int, dt.millisecond as int)
+    var newDay := DTUtils.ClampDay(dt.year, newMonth, dt.day);
+    FromUintComponents(dt.year, newMonth, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
-  function WithDayOfMonth(dt: LocalDateTime, newDay: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 1 <= newDay <= DTUtils.DaysInMonth(dt.year as int, dt.month as int)
+  function WithDayOfMonth(dt: LocalDateTime, newDay: uint8): LocalDateTime
+    requires IsValidLocalDateTime(dt) && 1 <= newDay <= (DTUtils.DaysInMonth(dt.year, dt.month) as uint8)
     ensures IsValidLocalDateTime(WithDayOfMonth(dt, newDay))
   {
-    FromIntComponents(dt.year as int, dt.month as int, newDay, dt.hour as int, dt.minute as int, dt.second as int, dt.millisecond as int)
+    FromUintComponents(dt.year, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
-  function WithHour(dt: LocalDateTime, newHour: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newHour < (HOURS_PER_DAY as int)
+  function WithHour(dt: LocalDateTime, newHour: uint8): LocalDateTime
+    requires IsValidLocalDateTime(dt) && newHour < HOURS_PER_DAY
     ensures IsValidLocalDateTime(WithHour(dt, newHour))
   {
-    FromIntComponents(dt.year as int, dt.month as int, dt.day as int, newHour, dt.minute as int, dt.second as int, dt.millisecond as int)
+    FromUintComponents(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
   }
 
-  function WithMinute(dt: LocalDateTime, newMinute: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newMinute < (MINUTES_PER_HOUR as int)
+  function WithMinute(dt: LocalDateTime, newMinute: uint8): LocalDateTime
+    requires IsValidLocalDateTime(dt) && newMinute < MINUTES_PER_HOUR
     ensures IsValidLocalDateTime(WithMinute(dt, newMinute))
   {
-    FromIntComponents(dt.year as int, dt.month as int, dt.day as int, dt.hour as int, newMinute, dt.second as int, dt.millisecond as int)
+    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
   }
 
-  function WithSecond(dt: LocalDateTime, newSecond: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newSecond < (SECONDS_PER_MINUTE as int)
+  function WithSecond(dt: LocalDateTime, newSecond: uint8): LocalDateTime
+    requires IsValidLocalDateTime(dt) && newSecond < SECONDS_PER_MINUTE
     ensures IsValidLocalDateTime(WithSecond(dt, newSecond))
   {
-    FromIntComponents(dt.year as int, dt.month as int, dt.day as int, dt.hour as int, dt.minute as int, newSecond, dt.millisecond as int)
+    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
   }
 
-  function WithMillisecond(dt: LocalDateTime, newMillisecond: int): LocalDateTime
-    requires IsValidLocalDateTime(dt) && 0 <= newMillisecond < (MILLISECONDS_PER_SECOND as int)
+  function WithMillisecond(dt: LocalDateTime, newMillisecond: uint16): LocalDateTime
+    requires IsValidLocalDateTime(dt) && newMillisecond < MILLISECONDS_PER_SECOND
     ensures IsValidLocalDateTime(WithMillisecond(dt, newMillisecond))
   {
-    FromIntComponents(dt.year as int, dt.month as int, dt.day as int, dt.hour as int, dt.minute as int, dt.second as int, newMillisecond)
+    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
   }
 
   // Plus methods
@@ -116,33 +126,10 @@ module LocalDateTime {
     requires IsValidLocalDateTime(dt)
     ensures IsValidLocalDateTime(Plus(dt, millisToAdd))
   {
-    var (year, month, day, hour, minute, second, millisecond) := ToIntComponents(dt);
-    var epochMillis := DTUtils.ToEpochTimeMillisecondsFunc(year, month, day, hour, minute, second, millisecond);
+    var epochMillis := DTUtils.ToEpochTimeMillisecondsFunc(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millisecond);
     var newEpochMillis := epochMillis + millisToAdd;
     var components := DTUtils.FromEpochTimeMillisecondsFunc(newEpochMillis);
-    FromIntComponents(components[0], components[1], components[2], components[3], components[4], components[5], components[6])
-  }
-
-  function PlusYears(dt: LocalDateTime, years: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(PlusYears(dt, years))
-  {
-    var (year, month, day, hour, minute, second, millisecond) := ToIntComponents(dt);
-    var newYear := year + years;
-    var validDay := DTUtils.ClampDay(newYear, month, day);
-    FromIntComponents(newYear, month, validDay, hour, minute, second, millisecond)
-  }
-
-  function PlusMonths(dt: LocalDateTime, months: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(PlusMonths(dt, months))
-  {
-    var (year, month, day, hour, minute, second, millisecond) := ToIntComponents(dt);
-    var totalMonths := month + months;
-    var newYear := year + (totalMonths - 1) / 12;
-    var newMonth := ((totalMonths - 1) % 12) + 1;
-    var validDay := DTUtils.ClampDay(newYear, newMonth, day);
-    FromIntComponents(newYear, newMonth, validDay, hour, minute, second, millisecond)
+    FromInt32Components(components)
   }
 
   function PlusDays(dt: LocalDateTime, days: int): LocalDateTime
@@ -181,19 +168,7 @@ module LocalDateTime {
   }
 
   // Minus methods
-  function MinusYears(dt: LocalDateTime, years: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(MinusYears(dt, years))
-  {
-    PlusYears(dt, -years)
-  }
 
-  function MinusMonths(dt: LocalDateTime, months: int): LocalDateTime
-    requires IsValidLocalDateTime(dt)
-    ensures IsValidLocalDateTime(MinusMonths(dt, months))
-  {
-    PlusMonths(dt, -months)
-  }
 
   function MinusDays(dt: LocalDateTime, days: int): LocalDateTime
     requires IsValidLocalDateTime(dt)
@@ -293,49 +268,55 @@ module LocalDateTime {
     ensures Now().Success? ==> IsValidLocalDateTime(Now().value)
   {
     var components := DTUtils.GetNowComponentsFunc();
-    if |components| == 7 then
-      var year := components[0] as int;
-      var month := components[1] as int;
-      var day := components[2] as int;
-      var hour := components[3] as int;
-      var minute := components[4] as int;
-      var second := components[5] as int;
-      var millisecond := components[6] as int;
-
-      var dt := FromIntComponents(year, month, day, hour, minute, second, millisecond);
-      if IsValidLocalDateTime(dt) then
-        Success(dt)
-      else
-        Failure("Current time components are invalid")
+    if |components| == 7 &&
+       MIN_YEAR <= components[0] <= MAX_YEAR && 0 <= components[1] <= 255 && 0 <= components[2] <= 255 &&
+       0 <= components[3] <= 255 && 0 <= components[4] <= 255 && 0 <= components[5] <= 255 && 0 <= components[6] <= 65535 &&
+       DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16) then
+      Success(FromInt32Components(components))
     else
       Failure("Failed to get current time components")
   }
 
 
   // Creation functions
-  function Of(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): Result<LocalDateTime, string>
+  function Of(year: int32, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): Result<LocalDateTime, string>
   {
-    if year >= 0 && year <= 65535 && month >= 0 && month <= 255 && day >= 0 && day <= 255 &&
+    if MIN_YEAR <= year <= MAX_YEAR && month >= 0 && month <= 255 && day >= 0 && day <= 255 &&
        hour >= 0 && hour <= 255 && minute >= 0 && minute <= 255 && second >= 0 && second <= 255 &&
        millisecond >= 0 && millisecond <= 65535 then
-      var dt := FromIntComponents(year, month, day, hour, minute, second, millisecond);
-      if IsValidLocalDateTime(dt) then
-        Success(dt)
+      var yearU := year;
+      var monthU := month as uint8;
+      var dayU := day as uint8;
+      var hourU := hour as uint8;
+      var minuteU := minute as uint8;
+      var secondU := second as uint8;
+      var millisecondU := millisecond as uint16;
+      if DTUtils.IsValidDateTime(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU) then
+        Success(FromUintComponents(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU))
       else
-        var error := DTUtils.GetValidationError(year as uint16, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16);
+        var error := DTUtils.GetValidationError(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU);
         Failure(error)
     else
       Failure("Parameters out of range for bounded integers")
   }
 
-  function Parse(text: string): Result<LocalDateTime, string>
+  function Parse(text: string, format: DateFormat): Result<LocalDateTime, string>
+    requires format == ISO8601 || format == DateOnly
   {
-    // Currently only supports ISO 8601 format parser: YYYY-MM-DDTHH:mm:ss.fff
-    if |text| < 23 then
-      Failure("Invalid format: Only supports ISO 8601 format YYYY-MM-DDTHH:mm:ss.fff for now")
+    match format {
+      case ISO8601 => ParseISO8601(text)
+      case DateOnly => ParseDateOnly(text)
+    }
+  }
+
+  // Parse ISO 8601 format: YYYY-MM-DDTHH:mm:ss.fff
+  function ParseISO8601(text: string): Result<LocalDateTime, string>
+  {
+    if |text| != 23 then
+      Failure("Invalid ISO8601 format: expected length 23, got " + OfInt(|text|))
     else if text[4] != '-' || text[7] != '-' || text[10] != 'T' ||
             text[13] != ':' || text[16] != ':' || text[19] != '.' then
-      Failure("Invalid format: expected YYYY-MM-DDTHH:mm:ss.fff")
+      Failure("Invalid ISO8601 format: expected YYYY-MM-DDTHH:mm:ss.fff")
     else
       var yearStr := text[0..4];
       var monthStr := text[5..7];
@@ -352,7 +333,7 @@ module LocalDateTime {
          !DecimalConversion.IsNumberStr(minuteStr, '-') ||
          !DecimalConversion.IsNumberStr(secondStr, '-') ||
          !DecimalConversion.IsNumberStr(millisecondStr, '-') then
-        Failure("Invalid format: extracted components are not valid numbers")
+        Failure("Invalid ISO8601 format: components are not valid numbers")
       else
         var year := ToInt(yearStr);
         var month := ToInt(monthStr);
@@ -362,8 +343,33 @@ module LocalDateTime {
         var second := ToInt(secondStr);
         var millisecond := ToInt(millisecondStr);
 
-        Of(year, month, day, hour, minute, second, millisecond)
+        Of(year as int32, month, day, hour, minute, second, millisecond)
   }
+
+  // Parse date only format: YYYY-MM-DD (time defaults to 00:00:00.000)
+  function ParseDateOnly(text: string): Result<LocalDateTime, string>
+  {
+    if |text| != 10 then
+      Failure("Invalid DateOnly format: expected length 10, got " + OfInt(|text|))
+    else if text[4] != '-' || text[7] != '-' then
+      Failure("Invalid DateOnly format: expected YYYY-MM-DD")
+    else
+      var yearStr := text[0..4];
+      var monthStr := text[5..7];
+      var dayStr := text[8..10];
+
+      if !DecimalConversion.IsNumberStr(yearStr, '-') ||
+         !DecimalConversion.IsNumberStr(monthStr, '-') ||
+         !DecimalConversion.IsNumberStr(dayStr, '-') then
+        Failure("Invalid DateOnly format: components are not valid numbers")
+      else
+        var year := ToInt(yearStr);
+        var month := ToInt(monthStr);
+        var day := ToInt(dayStr);
+
+        Of(year as int32, month, day, 0, 0, 0, 0)
+  }
+
 
   // Formatting functions
   // ISO 8601 format
