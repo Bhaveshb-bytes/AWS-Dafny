@@ -5,6 +5,7 @@ include "DateTimeConstant.dfy"
 include "ZonedDateTime.dfy"
 
 module TestZonedDateTime {
+    import opened Std.Wrappers
     import LDT = LocalDateTime
     import Duration = Duration
     import DTUtils = DateTimeUtils
@@ -21,13 +22,13 @@ module TestZonedDateTime {
 
     method PrintStatus(s: ZDT.Status)
     {
-        if s == ZDT.STATUS_UNIQUE   { print "Status=UNIQUE (0)\n"; }
-        else if s == ZDT.STATUS_OVERLAP { print "Status=OVERLAP (1)\n"; }
-        else if s == ZDT.STATUS_GAP { print "Status=GAP (2)\n"; }
+        if s == ZDT.Status.StatusUnique   { print "Status=UNIQUE (0)\n"; }
+        else if s == ZDT.Status.StatusOverlap { print "Status=OVERLAP (1)\n"; }
+        else if s == ZDT.Status.StatusGap { print "Status=GAP (2)\n"; }
         else { print "Status=UNKNOWN\n"; }
     }
 
-    method PrintResult(r: ZDT.Result<ZDT.ZonedDateTime, string>)
+    method PrintResult(r: Result<ZDT.ZonedDateTime, string>)
     {
         if r.Success? {
             var z := r.value;

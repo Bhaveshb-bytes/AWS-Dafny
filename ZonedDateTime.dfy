@@ -3,20 +3,15 @@ include "Duration.dfy"
 include "DateTimeUtils.dfy"
 
 module ZonedDateTime {
+    import opened Std.Wrappers
     import LDT = LocalDateTime
     import Duration
 
-    // Result type for operations that can fail
-    datatype Result<T, E> = Success(value: T) | Failure(error: E)
-
     // DST status
-    // 0 - unique: only one valid offset
-    // 1 - overlap: two valid offsets
-    // 2 - gap: no valid offset, need to shift forward
-    type Status = int
-    const STATUS_UNIQUE: Status := 0
-    const STATUS_OVERLAP: Status := 1
-    const STATUS_GAP: Status := 2
+    // StatusUnique: only one valid offset
+    // StatusOverlap: two valid offsets
+    // StatusGap: no valid offset, need to shift forward
+    datatype Status = StatusUnique | StatusOverlap | StatusGap
 
     // Preference for resolving local date-time in overlap or gap
     // -1: prefer earlier offset in overlap
@@ -39,7 +34,7 @@ module ZonedDateTime {
     {
         LDT.IsValidLocalDateTime(zd.local) &&
         -18*60 <= zd.offsetMinutes <= 18*60 &&
-        |zd.zoneId| > 0
+        0 < |zd.zoneId|
     }
 
     // Create a ZonedDateTime from components, resolving local date-time with preference
@@ -85,7 +80,11 @@ module ZonedDateTime {
     function OfLocal(zoneId: string, local: LDT.LocalDateTime, preference: Preference): (Result<ZonedDateTime, string>, Status)
     {
         var p := ResolveLocalImpl(zoneId, local.year, local.month, local.day, local.hour, local.minute, local.second, local.millisecond, preference);
-        var status' := p[0] as int;
+        
+        var status' := 
+            if p[0] as int == 0 then StatusUnique
+            else if p[0] as int == 1 then StatusOverlap
+            else StatusGap;
         var off     := p[1] as int;
 
         var ny := p[2] as int; var nm := p[3] as int; var nd := p[4] as int;
