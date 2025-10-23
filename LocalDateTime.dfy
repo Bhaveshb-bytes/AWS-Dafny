@@ -52,20 +52,16 @@ module LocalDateTime {
   }
 
 
-  function FromUintComponents(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): LocalDateTime
+  function FromComponents(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): LocalDateTime
     requires DTUtils.IsValidDateTime(year, month, day, hour, minute, second, millisecond)
   {
     LocalDateTime(year, month, day, hour, minute, second, millisecond)
   }
 
-  function FromInt32Components(components: seq<int32>): LocalDateTime
+  function FromSequenceComponents(components: seq<int32>): LocalDateTime
     requires |components| == 7
-    requires MIN_YEAR <= components[0] <= MAX_YEAR
-    requires 0 <= components[1] <= 255 && 0 <= components[2] <= 255
-    requires 0 <= components[3] <= 255 && 0 <= components[4] <= 255 && 0 <= components[5] <= 255 && 0 <= components[6] <= 65535
-    requires DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
   {
-    FromUintComponents(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
+    FromComponents(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
   }
 
   // Modification functions
@@ -74,7 +70,7 @@ module LocalDateTime {
     ensures IsValidLocalDateTime(WithYear(dt, newYear))
   {
     var newDay := DTUtils.ClampDay(newYear, dt.month, dt.day);
-    FromUintComponents(newYear, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+    FromComponents(newYear, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
   function WithMonth(dt: LocalDateTime, newMonth: uint8): LocalDateTime
@@ -82,42 +78,42 @@ module LocalDateTime {
     ensures IsValidLocalDateTime(WithMonth(dt, newMonth))
   {
     var newDay := DTUtils.ClampDay(dt.year, newMonth, dt.day);
-    FromUintComponents(dt.year, newMonth, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+    FromComponents(dt.year, newMonth, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
   function WithDayOfMonth(dt: LocalDateTime, newDay: uint8): LocalDateTime
     requires IsValidLocalDateTime(dt) && 1 <= newDay <= (DTUtils.DaysInMonth(dt.year, dt.month) as uint8)
     ensures IsValidLocalDateTime(WithDayOfMonth(dt, newDay))
   {
-    FromUintComponents(dt.year, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
+    FromComponents(dt.year, dt.month, newDay, dt.hour, dt.minute, dt.second, dt.millisecond)
   }
 
   function WithHour(dt: LocalDateTime, newHour: uint8): LocalDateTime
     requires IsValidLocalDateTime(dt) && newHour < HOURS_PER_DAY
     ensures IsValidLocalDateTime(WithHour(dt, newHour))
   {
-    FromUintComponents(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
+    FromComponents(dt.year, dt.month, dt.day, newHour, dt.minute, dt.second, dt.millisecond)
   }
 
   function WithMinute(dt: LocalDateTime, newMinute: uint8): LocalDateTime
     requires IsValidLocalDateTime(dt) && newMinute < MINUTES_PER_HOUR
     ensures IsValidLocalDateTime(WithMinute(dt, newMinute))
   {
-    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
+    FromComponents(dt.year, dt.month, dt.day, dt.hour, newMinute, dt.second, dt.millisecond)
   }
 
   function WithSecond(dt: LocalDateTime, newSecond: uint8): LocalDateTime
     requires IsValidLocalDateTime(dt) && newSecond < SECONDS_PER_MINUTE
     ensures IsValidLocalDateTime(WithSecond(dt, newSecond))
   {
-    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
+    FromComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, newSecond, dt.millisecond)
   }
 
   function WithMillisecond(dt: LocalDateTime, newMillisecond: uint16): LocalDateTime
     requires IsValidLocalDateTime(dt) && newMillisecond < MILLISECONDS_PER_SECOND
     ensures IsValidLocalDateTime(WithMillisecond(dt, newMillisecond))
   {
-    FromUintComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
+    FromComponents(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, newMillisecond)
   }
 
   // Plus methods
@@ -129,7 +125,7 @@ module LocalDateTime {
     var epochMillis := DTUtils.ToEpochTimeMillisecondsFunc(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millisecond);
     var newEpochMillis := epochMillis + millisToAdd;
     var components := DTUtils.FromEpochTimeMillisecondsFunc(newEpochMillis);
-    FromInt32Components(components)
+    FromSequenceComponents(components)
   }
 
   function PlusDays(dt: LocalDateTime, days: int): LocalDateTime
@@ -272,7 +268,7 @@ module LocalDateTime {
        MIN_YEAR <= components[0] <= MAX_YEAR && 0 <= components[1] <= 255 && 0 <= components[2] <= 255 &&
        0 <= components[3] <= 255 && 0 <= components[4] <= 255 && 0 <= components[5] <= 255 && 0 <= components[6] <= 65535 &&
        DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16) then
-      Success(FromInt32Components(components))
+      Success(FromSequenceComponents(components))
     else
       Failure("Failed to get current time components")
   }
@@ -292,7 +288,7 @@ module LocalDateTime {
       var secondU := second as uint8;
       var millisecondU := millisecond as uint16;
       if DTUtils.IsValidDateTime(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU) then
-        Success(FromUintComponents(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU))
+        Success(FromComponents(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU))
       else
         var error := DTUtils.GetValidationError(yearU, monthU, dayU, hourU, minuteU, secondU, millisecondU);
         Failure(error)
