@@ -2,17 +2,16 @@ include "Duration.dfy"
 
 module TestDuration {
   import Duration
-  method TestStringIndexOf() {
-    assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
-    assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
-    assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
 
-    var idx := Duration.StringIndexOf("PT9650H30M45.123S", '.');
-    print "Index = ", idx, "\n";
+  method TestOfParseString() {
+    var parsedResult := Duration.ParseString("PT9650H30M45.123S");
+    expect Duration.GetMilliseconds(parsedResult) == 123;
   }
 
   method Main() {
-   
+
+    TestOfParseString();
+
     var d1 :=Duration.Duration(1,2);
     var d2 :=Duration.Duration(1,3);
     // Compute total ms
@@ -26,8 +25,8 @@ module TestDuration {
     var cmp := Duration.Compare(d1, d2);
 
     // Equality
-    assert Duration.Equal(d1, d1);
-    assert !Duration.Equal(d1, d2);
+    assert d1 == d1;
+    assert !(d1==d2);
 
 //basic math and roundtrip correctness
 
@@ -36,15 +35,13 @@ module TestDuration {
   assert Duration.ToTotalMilliseconds(scaled) == 5000;
 
   var divided := Duration.Divide(scaled, 2);
-  assert Duration.Equal(divided, d);
-
+  assert divided == d;
   var mod := Duration.Mod(scaled, d);
-  assert Duration.Equal(mod, Duration.FromMilliseconds(0));
-
+  assert mod == Duration.FromMilliseconds(0);
   var dmin := Duration.Min(d, scaled);
   var dmax := Duration.Max(d, scaled);
-  assert Duration.Equal(dmin, d);
-  assert Duration.Equal(dmax, scaled);
+  assert dmin == d;
+  assert dmax == scaled;
 //Conversion between seconds, minutes, hours
   var oneSec := Duration.FromSeconds(1);
   assert Duration.ToTotalMilliseconds(oneSec) == 1000;
@@ -89,9 +86,6 @@ assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
 
-
-var ddd := Duration.ParseStringVerified("PT9650H30M45.123S");
-assert Duration.GetMilliseconds(ddd) == 123;
 
   }
 

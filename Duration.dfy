@@ -123,7 +123,6 @@ function Scale(d: Duration, factor: int): Duration
 
 function Divide(d: Duration, divisor: int): Duration
   requires divisor > 0
-
 {
   FromMilliseconds(ToTotalMilliseconds(d) / divisor)
 }
@@ -243,12 +242,6 @@ function ParseString(text: string): Duration
   Duration(totalSeconds, millisecond)
 }
 
-function ParseStringVerified(text: string): Duration
-  requires text == "PT9650H30M45.123S"
-  ensures ParseString(text).millis == 123
-  ensures 0 <= ParseString(text).millis < 1000
-{
-  Duration(9650 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE + 45, 123)
-}
+
 //build command: dafny build TestDuration.dfy --standard-libraries
  }
