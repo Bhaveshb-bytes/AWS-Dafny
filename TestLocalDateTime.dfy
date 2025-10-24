@@ -59,25 +59,25 @@ module TestLocalDateTime {
 
   method TestParseFunction()
   {
-    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ISO8601);
+    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ParseFormat.ISO8601);
     if validResult1.Success? {
       var dt1 := validResult1.value;
       assert LDT.IsValidLocalDateTime(dt1);
     }
 
     // Test invalid format cases - these should return Failure
-    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45", LDT.ISO8601);     // Wrong separators
-    var invalidFormat2 := LDT.Parse("2023-06-15", LDT.ISO8601);              // Too short
-    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45", LDT.ISO8601);     // Missing milliseconds
-    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123", LDT.ISO8601); // Wrong date order
-    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123", LDT.ISO8601);  // Single digit month
-    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123", LDT.ISO8601);  // Single digit day
-    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123", LDT.ISO8601);  // Single digit hour
-    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123", LDT.ISO8601);  // Single digit minute
-    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123", LDT.ISO8601);  // Single digit second
-    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12", LDT.ISO8601); // Wrong millisecond length
-    var invalidFormat11 := LDT.Parse("", LDT.ISO8601);                       // Empty string
-    var invalidFormat12 := LDT.Parse("not-a-date", LDT.ISO8601);             // Completely invalid
+    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45", LDT.ParseFormat.ISO8601);     // Wrong separators
+    var invalidFormat2 := LDT.Parse("2023-06-15", LDT.ParseFormat.ISO8601);              // Too short
+    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45", LDT.ParseFormat.ISO8601);     // Missing milliseconds
+    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123", LDT.ParseFormat.ISO8601); // Wrong date order
+    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123", LDT.ParseFormat.ISO8601);  // Single digit month
+    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123", LDT.ParseFormat.ISO8601);  // Single digit day
+    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123", LDT.ParseFormat.ISO8601);  // Single digit hour
+    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123", LDT.ParseFormat.ISO8601);  // Single digit minute
+    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123", LDT.ParseFormat.ISO8601);  // Single digit second
+    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12", LDT.ParseFormat.ISO8601); // Wrong millisecond length
+    var invalidFormat11 := LDT.Parse("", LDT.ParseFormat.ISO8601);                       // Empty string
+    var invalidFormat12 := LDT.Parse("not-a-date", LDT.ParseFormat.ISO8601);             // Completely invalid
 
     // Verify format failures
     assert invalidFormat1.Failure?;
@@ -97,31 +97,31 @@ module TestLocalDateTime {
   method TestDateOnlyParsing()
   {
     // Test valid DateOnly parsing - simplified to avoid verification timeout
-    var validDateOnly1 := LDT.Parse("2023-06-15", LDT.DateOnly);
+    var validDateOnly1 := LDT.Parse("2023-06-15", LDT.ParseFormat.DateOnly);
     expect validDateOnly1.Success?;
     if validDateOnly1.Success? {
       var dt := validDateOnly1.value;
       expect LDT.IsValidLocalDateTime(dt);
     }
 
-    var validDateOnly2 := LDT.Parse("2024-02-29", LDT.DateOnly); // Leap year
+    var validDateOnly2 := LDT.Parse("2024-02-29", LDT.ParseFormat.DateOnly); // Leap year
     expect validDateOnly2.Success?;
 
-    var validDateOnly3 := LDT.Parse("2000-12-31", LDT.DateOnly); // End of century leap year  
+    var validDateOnly3 := LDT.Parse("2000-12-31", LDT.ParseFormat.DateOnly); // End of century leap year  
     expect validDateOnly3.Success?;
 
     // Test invalid DateOnly formats
-    var invalidDateOnly1 := LDT.Parse("2023/06/15", LDT.DateOnly);      // Wrong separators
-    var invalidDateOnly2 := LDT.Parse("2023-6-15", LDT.DateOnly);       // Single digit month
-    var invalidDateOnly3 := LDT.Parse("2023-06-5", LDT.DateOnly);       // Single digit day
-    var invalidDateOnly4 := LDT.Parse("23-06-15", LDT.DateOnly);        // Two digit year
-    var invalidDateOnly5 := LDT.Parse("2023-13-15", LDT.DateOnly);      // Invalid month
-    var invalidDateOnly6 := LDT.Parse("2023-02-30", LDT.DateOnly);      // Invalid day for February
-    var invalidDateOnly7 := LDT.Parse("2023-04-31", LDT.DateOnly);      // Invalid day for April
-    var invalidDateOnly8 := LDT.Parse("2023-06-15T14:30:45", LDT.DateOnly); // Too long
-    var invalidDateOnly9 := LDT.Parse("2023-06", LDT.DateOnly);         // Too short
-    var invalidDateOnly10 := LDT.Parse("", LDT.DateOnly);               // Empty string
-    var invalidDateOnly11 := LDT.Parse("not-a-date", LDT.DateOnly);     // Invalid format
+    var invalidDateOnly1 := LDT.Parse("2023/06/15", LDT.ParseFormat.DateOnly);      // Wrong separators
+    var invalidDateOnly2 := LDT.Parse("2023-6-15", LDT.ParseFormat.DateOnly);       // Single digit month
+    var invalidDateOnly3 := LDT.Parse("2023-06-5", LDT.ParseFormat.DateOnly);       // Single digit day
+    var invalidDateOnly4 := LDT.Parse("23-06-15", LDT.ParseFormat.DateOnly);        // Two digit year
+    var invalidDateOnly5 := LDT.Parse("2023-13-15", LDT.ParseFormat.DateOnly);      // Invalid month
+    var invalidDateOnly6 := LDT.Parse("2023-02-30", LDT.ParseFormat.DateOnly);      // Invalid day for February
+    var invalidDateOnly7 := LDT.Parse("2023-04-31", LDT.ParseFormat.DateOnly);      // Invalid day for April
+    var invalidDateOnly8 := LDT.Parse("2023-06-15T14:30:45", LDT.ParseFormat.DateOnly); // Too long
+    var invalidDateOnly9 := LDT.Parse("2023-06", LDT.ParseFormat.DateOnly);         // Too short
+    var invalidDateOnly10 := LDT.Parse("", LDT.ParseFormat.DateOnly);               // Empty string
+    var invalidDateOnly11 := LDT.Parse("not-a-date", LDT.ParseFormat.DateOnly);     // Invalid format
 
     // Verify DateOnly format failures
     assert invalidDateOnly1.Failure?;
@@ -190,22 +190,22 @@ module TestLocalDateTime {
     assert isoStr == "2023-06-15T14:30:45.123";
 
     // Test type-safe Format function with DateFormat datatype
-    var isoFormat := LDT.Format(dt, LDT.ISO8601);
+    var isoFormat := LDT.Format(dt, LDT.DateFormat.ISO8601);
     assert isoFormat == "2023-06-15T14:30:45.123";
 
-    var dateOnly := LDT.Format(dt, LDT.DateOnly);
+    var dateOnly := LDT.Format(dt, LDT.DateFormat.DateOnly);
     assert dateOnly == "2023-06-15";
 
-    var timeOnly := LDT.Format(dt, LDT.TimeOnly);
+    var timeOnly := LDT.Format(dt, LDT.DateFormat.TimeOnly);
     assert timeOnly == "14:30:45";
 
-    var dateTimeSpace := LDT.Format(dt, LDT.DateTimeSpace);
+    var dateTimeSpace := LDT.Format(dt, LDT.DateFormat.DateTimeSpace);
     assert dateTimeSpace == "2023-06-15 14:30:45";
 
-    var ddmmyyyy := LDT.Format(dt, LDT.DateSlashDDMMYYYY);
+    var ddmmyyyy := LDT.Format(dt, LDT.DateFormat.DateSlashDDMMYYYY);
     assert ddmmyyyy == "15/06/2023";
 
-    var mmddyyyy := LDT.Format(dt, LDT.DateSlashMMDDYYYY);
+    var mmddyyyy := LDT.Format(dt, LDT.DateFormat.DateSlashMMDDYYYY);
     assert mmddyyyy == "06/15/2023";
 
     // Test string-based FormatString function with Result handling

@@ -19,6 +19,10 @@ module LocalDateTime {
     | DateSlashDDMMYYYY          // dd/MM/yyyy
     | DateSlashMMDDYYYY          // MM/dd/yyyy
 
+  datatype ParseFormat =
+    | ISO8601       // yyyy-MM-ddTHH:mm:ss.fff
+    | DateOnly      // yyyy-MM-dd
+
   // LocalDateTime: represents date-time without time zone information
   datatype LocalDateTime = LocalDateTime(
     year: int32,
@@ -289,8 +293,7 @@ module LocalDateTime {
       Failure("Parameters out of range for bounded integers")
   }
 
-  function Parse(text: string, format: DateFormat): Result<LocalDateTime, string>
-    requires format == ISO8601 || format == DateOnly
+  function Parse(text: string, format: ParseFormat): Result<LocalDateTime, string>
   {
     match format {
       case ISO8601 => ParseISO8601(text)
@@ -395,17 +398,17 @@ module LocalDateTime {
     requires IsValidLocalDateTime(dt)
   {
     if pattern == "yyyy-MM-ddTHH:mm:ss.fff" then
-      Success(Format(dt, ISO8601))
+      Success(Format(dt, DateFormat.ISO8601))
     else if pattern == "yyyy-MM-dd" then
-      Success(Format(dt, DateOnly))
+      Success(Format(dt, DateFormat.DateOnly))
     else if pattern == "HH:mm:ss" then
-      Success(Format(dt, TimeOnly))
+      Success(Format(dt, DateFormat.TimeOnly))
     else if pattern == "yyyy-MM-dd HH:mm:ss" then
-      Success(Format(dt, DateTimeSpace))
+      Success(Format(dt, DateFormat.DateTimeSpace))
     else if pattern == "dd/MM/yyyy" then
-      Success(Format(dt, DateSlashDDMMYYYY))
+      Success(Format(dt, DateFormat.DateSlashDDMMYYYY))
     else if pattern == "MM/dd/yyyy" then
-      Success(Format(dt, DateSlashMMDDYYYY))
+      Success(Format(dt, DateFormat.DateSlashMMDDYYYY))
     else
       Failure("Unsupported format pattern: " + pattern)
   }
