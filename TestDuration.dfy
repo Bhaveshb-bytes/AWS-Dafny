@@ -12,7 +12,6 @@ module TestDuration {
   }
 
   method Main() {
-   //TestStringIndexOf();
    
     var d1 :=Duration.Duration(1,2);
     var d2 :=Duration.Duration(1,3);
@@ -21,10 +20,8 @@ module TestDuration {
 
     // Addition
     var d3 := Duration.Plus(d1, d2);
-    //ShowDuration(d3);
     // Subtraction
     var d4 := Duration.Minus(d1, d2);
-    //ShowDuration(d4);
     // Comparison
     var cmp := Duration.Compare(d1, d2);
 
@@ -65,14 +62,6 @@ module TestDuration {
   var d_2 := Duration.Duration(1, 0);
   var d_3 := Duration.Duration(1, 500);
 
-//  var seq: seq<Duration.Duration> := [d_1, d2, d3];
-
-//  var maxD := Std.DateTime.Duration.Max(seq);
-//  var minD := Std.DateTime.Duration.Min(seq);
-
-//  assert Duration.Equal(maxD, d3);
-//  assert Duration.Equal(minD, d1);
-
 //comparing edge cases
   var d5 := Duration.FromMilliseconds(1000);
   var d6 := Duration.FromMilliseconds(999);
@@ -94,7 +83,7 @@ module TestDuration {
   var d8 := Duration.FromMilliseconds(2500);
   assert Duration.GetSeconds(d8) == 2;
   assert Duration.GetMilliseconds(d8) == 500;
- //dafny verify TestDuration.dfy
+//dafny verify TestDuration.dfy
 
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
 assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
