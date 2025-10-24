@@ -273,24 +273,12 @@ module LocalDateTime {
   }
 
   // Creation functions
-  function Of(year: int32, month: int, day: int, hour: int, minute: int, second: int, millisecond: int): Result<LocalDateTime, string>
+  function Of(year: int32, month: uint8, day: uint8, hour: uint8, minute: uint8, second: uint8, millisecond: uint16): Result<LocalDateTime, string>
   {
-    if MIN_YEAR <= year <= MAX_YEAR && month >= 0 && month <= 255 && day >= 0 && day <= 255 &&
-       hour >= 0 && hour <= 255 && minute >= 0 && minute <= 255 && second >= 0 && second <= 255 &&
-       millisecond >= 0 && millisecond <= 65535 then
-      var monthU := month as uint8;
-      var dayU := day as uint8;
-      var hourU := hour as uint8;
-      var minuteU := minute as uint8;
-      var secondU := second as uint8;
-      var millisecondU := millisecond as uint16;
-      if DTUtils.IsValidDateTime(year, monthU, dayU, hourU, minuteU, secondU, millisecondU) then
-        Success(FromComponents(year, monthU, dayU, hourU, minuteU, secondU, millisecondU))
+      if DTUtils.IsValidDateTime(year, month, day, hour, minute, second, millisecond) then
+        Success(FromComponents(year, month, day, hour, minute, second, millisecond))
       else
-        var error := DTUtils.GetValidationError(year, monthU, dayU, hourU, minuteU, secondU, millisecondU);
-        Failure(error)
-    else
-      Failure("Parameters out of range for bounded integers")
+        Failure(DTUtils.GetValidationError(year, month, day, hour, minute, second, millisecond))
   }
 
   function Parse(text: string, format: ParseFormat): Result<LocalDateTime, string>
@@ -335,8 +323,11 @@ module LocalDateTime {
         var second := ToInt(secondStr);
         var millisecond := ToInt(millisecondStr);
 
-        Of(year as int32, month, day, hour, minute, second, millisecond)
-  }
+        if DTUtils.IsValidDateTime(year as int32, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16) then
+          Success(FromComponents(year as int32, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16))
+        else
+          Failure(DTUtils.GetValidationError(year as int32, month as uint8, day as uint8, hour as uint8, minute as uint8, second as uint8, millisecond as uint16))
+    }
 
   // Parse date only format: YYYY-MM-DD (time defaults to 00:00:00.000)
   function ParseDateOnly(text: string): Result<LocalDateTime, string>
@@ -358,8 +349,10 @@ module LocalDateTime {
         var year := ToInt(yearStr);
         var month := ToInt(monthStr);
         var day := ToInt(dayStr);
-
-        Of(year as int32, month, day, 0, 0, 0, 0)
+        if DTUtils.IsValidDateTime(year as int32, month as uint8, day as uint8, 0, 0, 0, 0) then
+          Success(FromComponents(year as int32, month as uint8, day as uint8, 0, 0, 0, 0))
+        else
+          Failure(DTUtils.GetValidationError(year as int32, month as uint8, day as uint8, 0, 0, 0, 0))
   }
 
 

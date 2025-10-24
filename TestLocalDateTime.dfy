@@ -32,14 +32,10 @@ module TestLocalDateTime {
     var invalidDay2 := LDT.Of(2023, 6, 32, 14, 30, 45, 123);    // Day too high for June
     var invalidDay3 := LDT.Of(2023, 2, 29, 14, 30, 45, 123);    // Feb 29 in non-leap year
     var invalidDay4 := LDT.Of(2023, 4, 31, 14, 30, 45, 123);    // April 31st doesn't exist
-    var invalidHour1 := LDT.Of(2023, 6, 15, -1, 30, 45, 123);   // Hour too low
-    var invalidHour2 := LDT.Of(2023, 6, 15, 24, 30, 45, 123);   // Hour too high
-    var invalidMinute1 := LDT.Of(2023, 6, 15, 14, -1, 45, 123); // Minute too low
-    var invalidMinute2 := LDT.Of(2023, 6, 15, 14, 60, 45, 123); // Minute too high
-    var invalidSecond1 := LDT.Of(2023, 6, 15, 14, 30, -1, 123); // Second too low
-    var invalidSecond2 := LDT.Of(2023, 6, 15, 14, 30, 60, 123); // Second too high
-    var invalidMs1 := LDT.Of(2023, 6, 15, 14, 30, 45, -1);      // Millisecond too low
-    var invalidMs2 := LDT.Of(2023, 6, 15, 14, 30, 45, 1000);    // Millisecond too high
+    var invalidHour := LDT.Of(2023, 6, 15, 24, 30, 45, 123);   // Hour too high
+    var invalidMinute := LDT.Of(2023, 6, 15, 14, 60, 45, 123); // Minute too high
+    var invalidSecond := LDT.Of(2023, 6, 15, 14, 30, 60, 123); // Second too high
+    var invalidMs := LDT.Of(2023, 6, 15, 14, 30, 45, 1000);    // Millisecond too high
 
     assert invalidMonth1.Failure?;
     assert invalidMonth2.Failure?;
@@ -47,14 +43,10 @@ module TestLocalDateTime {
     assert invalidDay2.Failure?;
     assert invalidDay3.Failure?;
     assert invalidDay4.Failure?;
-    assert invalidHour1.Failure?;
-    assert invalidHour2.Failure?;
-    assert invalidMinute1.Failure?;
-    assert invalidMinute2.Failure?;
-    assert invalidSecond1.Failure?;
-    assert invalidSecond2.Failure?;
-    assert invalidMs1.Failure?;
-    assert invalidMs2.Failure?;
+    assert invalidHour.Failure?;
+    assert invalidMinute.Failure?;
+    assert invalidSecond.Failure?;
+    assert invalidMs.Failure?;
   }
 
   method TestParseFunction()
