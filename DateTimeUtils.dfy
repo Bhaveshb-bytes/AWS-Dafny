@@ -27,11 +27,9 @@ module DateTimeUtils {
             MIN_YEAR <= components[0] <= MAX_YEAR && // year as int32
             forall i :: 1 <= i < |components| ==> 0 <= components[i] <= 65535
 
-  // Leap year calculation
-  predicate IsLeapYear(year: int32)
-  {
-    (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)
-  }
+  // Leap year calculation using extern implementation
+  function {:extern "DateTimeImpl", "IsLeapYear"}
+    {:axiom} IsLeapYear(year: int32): bool
 
   // Days in month calculation
   function DaysInMonth(year: int32, month: uint8): uint8

@@ -13,16 +13,16 @@ module TestLocalDateTime {
     var result1 := LDT.Of(2023, 6, 15, 14, 30, 45, 123);
     if result1.Success? {
       var dt1 := result1.value;
-      assert dt1.year == 2023 && dt1.month == 6 && dt1.day == 15;
-      assert dt1.hour == 14 && dt1.minute == 30 && dt1.second == 45 && dt1.millisecond == 123;
-      assert LDT.IsValidLocalDateTime(dt1);
+      expect dt1.year == 2023 && dt1.month == 6 && dt1.day == 15;
+      expect dt1.hour == 14 && dt1.minute == 30 && dt1.second == 45 && dt1.millisecond == 123;
+      expect LDT.IsValidLocalDateTime(dt1);
     }
 
     var leapYearResult := LDT.Of(2020, 2, 29, 0, 0, 0, 0);
     if leapYearResult.Success? {
       var leapDt := leapYearResult.value;
-      assert leapDt.year == 2020 && leapDt.month == 2 && leapDt.day == 29;
-      assert LDT.IsValidLocalDateTime(leapDt);
+      expect leapDt.year == 2020 && leapDt.month == 2 && leapDt.day == 29;
+      expect LDT.IsValidLocalDateTime(leapDt);
     }
 
     // Test invalid cases
@@ -37,16 +37,16 @@ module TestLocalDateTime {
     var invalidSecond := LDT.Of(2023, 6, 15, 14, 30, 60, 123); // Second too high
     var invalidMs := LDT.Of(2023, 6, 15, 14, 30, 45, 1000);    // Millisecond too high
 
-    assert invalidMonth1.Failure?;
-    assert invalidMonth2.Failure?;
-    assert invalidDay1.Failure?;
-    assert invalidDay2.Failure?;
-    assert invalidDay3.Failure?;
-    assert invalidDay4.Failure?;
-    assert invalidHour.Failure?;
-    assert invalidMinute.Failure?;
-    assert invalidSecond.Failure?;
-    assert invalidMs.Failure?;
+    expect invalidMonth1.Failure?;
+    expect invalidMonth2.Failure?;
+    expect invalidDay1.Failure?;
+    expect invalidDay2.Failure?;
+    expect invalidDay3.Failure?;
+    expect invalidDay4.Failure?;
+    expect invalidHour.Failure?;
+    expect invalidMinute.Failure?;
+    expect invalidSecond.Failure?;
+    expect invalidMs.Failure?;
   }
 
   method TestParseFunction()
@@ -253,18 +253,18 @@ module TestLocalDateTime {
 
   method TestWithNotNormalCase() {
     var dt1 := LDT.LocalDateTime(2020, 2, 29, 15, 9, 26, 535);
-    assert LDT.IsValidLocalDateTime(dt1);
+    expect LDT.IsValidLocalDateTime(dt1);
 
     var dt1_with_new_year := LDT.WithYear(dt1, 2021);
-    assert dt1_with_new_year.year == 2021;
-    assert dt1_with_new_year.day == 28; // Clamped to 28 since 2021 is not a leap year
+    expect dt1_with_new_year.year == 2021;
+    expect dt1_with_new_year.day == 28; // Clamped to 28 since 2021 is not a leap year
 
     var dt2 := LDT.LocalDateTime(2020, 3, 31, 15, 9, 26, 535);
-    assert LDT.IsValidLocalDateTime(dt2);
+    expect LDT.IsValidLocalDateTime(dt2);
 
     var dt2_with_new_month := LDT.WithMonth(dt2, 4);
-    assert dt2_with_new_month.month == 4;
-    assert dt2_with_new_month.day == 30; // Clamped to 30 since April has 30 days
+    expect dt2_with_new_month.month == 4;
+    expect dt2_with_new_month.day == 30; // Clamped to 30 since April has 30 days
   }
 
   method TestGetters() {
@@ -280,10 +280,10 @@ module TestLocalDateTime {
   }
 
   method TestIsLeapYear() {
-    assert DTUtils.IsLeapYear(2020); // Divisible by 4 and not by 100
-    assert !DTUtils.IsLeapYear(2021); // Not divisible by 4
-    assert !DTUtils.IsLeapYear(1900); // Divisible by 100 but not by 400
-    assert DTUtils.IsLeapYear(2000); // Divisible by 400
+    expect DTUtils.IsLeapYear(2020); // Divisible by 4 and not by 100
+    expect !DTUtils.IsLeapYear(2021); // Not divisible by 4
+    expect !DTUtils.IsLeapYear(1900); // Divisible by 100 but not by 400
+    expect DTUtils.IsLeapYear(2000); // Divisible by 400
   }
 
   method TestIsValidLocalDateTime() {
@@ -310,19 +310,17 @@ module TestLocalDateTime {
   }
 
   method TestDaysInMonth() {
-    assert DTUtils.DaysInMonth(2023, 1) == 31;
-    assert DTUtils.DaysInMonth(2023, 2) == 28;
-    assert DTUtils.DaysInMonth(2020, 2) == 29; // Leap year
-    assert DTUtils.DaysInMonth(2023, 4) == 30;
-    assert DTUtils.DaysInMonth(2023, 12) == 31;
+    expect DTUtils.DaysInMonth(2023, 1) == 31;
+    expect DTUtils.DaysInMonth(2023, 2) == 28;
+    expect DTUtils.DaysInMonth(2020, 2) == 29; // Leap year
+    expect DTUtils.DaysInMonth(2023, 4) == 30;
+    expect DTUtils.DaysInMonth(2023, 12) == 31;
   }
 
   method TestDaysInYear() {
-    assert DTUtils.DaysInYear(2023) == 365;
-    assert DTUtils.DaysInYear(2020) == 366; // Leap year
+    expect DTUtils.DaysInYear(2023) == 365;
+    expect DTUtils.DaysInYear(2020) == 366; // Leap year
   }
-
-
 
   method TestPlusDays() {
     // Test day overflow across month boundary
