@@ -3,10 +3,11 @@ include "DateTimeConstant.dfy"
 module Duration {
   import opened DateTimeConstant
   import opened Std.Strings
-
+  import opened Std.Collections.Seq
+  //import opened Wrappers
   datatype Duration = Duration(
-    seconds: int,   // 0 <= seconds < 9999year * seconds per day
-    millis: int     // 0 <= millis < 1000
+    seconds: nat,  // 0 <= seconds < 9999year * seconds per day
+    millis: nat       // 0 <= millis < 1000
   )
 
  function EpochDifference(epoch1: int, epoch2: int): Duration
@@ -196,7 +197,7 @@ function ToString(d: Duration): string
 //PT9650H30M45.123S s: seq<char>
 
 
-
+/*
 function SeqIndexOf(s: seq<char>, c: char): int
   ensures -1 <= SeqIndexOf(s, c) < |s|
 {
@@ -211,19 +212,22 @@ function StringIndexOf(s: string, c: char): int
   ensures -1 <= StringIndexOf(s, c) < |s|
 {
   SeqIndexOf(s[..], c)
-}
+}*/
 
 
 function ParseString(text: string): Duration
   requires text[0..2] == "PT"  // must start with PT
   ensures 0 <= ParseString(text).millis < 1000
 {
-  // Find positions of delimiters
+  /*Find positions of delimiters
   var len := |text|;
   var hPos := StringIndexOf(text, 'H');
   var mPos := StringIndexOf(text, 'M');
-  var dotPos := StringIndexOf(text, '.');
-
+  var dotPos := StringIndexOf(text, '.');*/
+  var len := |text|;
+  var hPos := match IndexOfOption(text, 'H') case Some(i) => i as int case None => -1;
+  var mPos := match IndexOfOption(text, 'M') case Some(i) => i as int case None => -1;
+  var dotPos := match IndexOfOption(text, '.') case Some(i) => i as int case None => -1;
 
   // Extract substrings between markers
   var hourStr := text[2..hPos];

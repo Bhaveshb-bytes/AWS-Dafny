@@ -82,9 +82,9 @@ module TestDuration {
   assert Duration.GetMilliseconds(d8) == 500;
 //dafny verify TestDuration.dfy
 
-assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
-assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
-assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
+//assert Duration.StringIndexOf("PT9650H30M45.123S", 'T') == 1;
+//assert Duration.StringIndexOf("PT9650H30M45.123S", 'H') == 6;
+//assert Duration.StringIndexOf("PT9650H30M45.123S", 'M') == 9;
 
 
   }
