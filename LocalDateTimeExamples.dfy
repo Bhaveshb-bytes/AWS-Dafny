@@ -1,12 +1,14 @@
 include "LocalDateTime.dfy"
 include "Duration.dfy"
 include "DateTimeUtils.dfy"
+include "Helpers.dfy"
 
 module TestLocalDateTime {
   import opened Std.BoundedInts
   import LDT = LocalDateTime
   import Duration = Duration
   import DTUtils = DateTimeUtils
+  import opened Helpers
 
   method {:test} TestOfFunction()
   {
@@ -54,7 +56,7 @@ module TestLocalDateTime {
     var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ParseFormat.ISO8601);
     if validResult1.Success? {
       var dt1 := validResult1.value;
-      assert LDT.IsValidLocalDateTime(dt1);
+      AssertAndExpect(LDT.IsValidLocalDateTime(dt1));
     }
 
     // Test invalid format cases - these should return Failure
@@ -72,18 +74,18 @@ module TestLocalDateTime {
     var invalidFormat12 := LDT.Parse("not-a-date", LDT.ParseFormat.ISO8601);             // Completely invalid
 
     // Verify format failures
-    assert invalidFormat1.Failure?;
-    assert invalidFormat2.Failure?;
-    assert invalidFormat3.Failure?;
-    assert invalidFormat4.Failure?;
-    assert invalidFormat5.Failure?;
-    assert invalidFormat6.Failure?;
-    assert invalidFormat7.Failure?;
-    assert invalidFormat8.Failure?;
-    assert invalidFormat9.Failure?;
-    assert invalidFormat10.Failure?;
-    assert invalidFormat11.Failure?;
-    assert invalidFormat12.Failure?;
+    AssertAndExpect(invalidFormat1.Failure?);
+    AssertAndExpect(invalidFormat2.Failure?);
+    AssertAndExpect(invalidFormat3.Failure?);
+    AssertAndExpect(invalidFormat4.Failure?);
+    AssertAndExpect(invalidFormat5.Failure?);
+    AssertAndExpect(invalidFormat6.Failure?);
+    AssertAndExpect(invalidFormat7.Failure?);
+    AssertAndExpect(invalidFormat8.Failure?);
+    AssertAndExpect(invalidFormat9.Failure?);
+    AssertAndExpect(invalidFormat10.Failure?);
+    AssertAndExpect(invalidFormat11.Failure?);
+    AssertAndExpect(invalidFormat12.Failure?);
   }
 
   method {:test} TestDateOnlyParsing()
@@ -139,9 +141,9 @@ module TestLocalDateTime {
     var cmp2 := LDT.CompareLocal(dt2, dt1);
     var cmp3 := LDT.CompareLocal(dt1, dt3);
 
-    assert cmp1 == -1;  // dt1 < dt2
-    assert cmp2 == 1;   // dt2 > dt1
-    assert cmp3 == 0;   // dt1 == dt3
+    AssertAndExpect(cmp1 == -1);  // dt1 < dt2
+    AssertAndExpect(cmp2 == 1);   // dt2 > dt1
+    AssertAndExpect(cmp3 == 0);   // dt1 == dt3
   }
 
   method {:test} TestArithmeticFunctions()
@@ -180,71 +182,71 @@ module TestLocalDateTime {
 
     // Test type-safe Format function with DateFormat datatype
     var isoFormat := LDT.Format(dt, LDT.DateFormat.ISO8601);
-    assert isoFormat == "2023-06-15T14:30:45.123";
+    AssertAndExpect(isoFormat == "2023-06-15T14:30:45.123");
 
     var dateOnly := LDT.Format(dt, LDT.DateFormat.DateOnly);
-    assert dateOnly == "2023-06-15";
+    AssertAndExpect(dateOnly == "2023-06-15");
 
     var timeOnly := LDT.Format(dt, LDT.DateFormat.TimeOnly);
-    assert timeOnly == "14:30:45";
+    AssertAndExpect(timeOnly == "14:30:45");
 
     var dateTimeSpace := LDT.Format(dt, LDT.DateFormat.DateTimeSpace);
-    assert dateTimeSpace == "2023-06-15 14:30:45";
+    AssertAndExpect(dateTimeSpace == "2023-06-15 14:30:45");
 
     var ddmmyyyy := LDT.Format(dt, LDT.DateFormat.DateSlashDDMMYYYY);
-    assert ddmmyyyy == "15/06/2023";
+    AssertAndExpect(ddmmyyyy == "15/06/2023");
 
     var mmddyyyy := LDT.Format(dt, LDT.DateFormat.DateSlashMMDDYYYY);
-    assert mmddyyyy == "06/15/2023";
+    AssertAndExpect(mmddyyyy == "06/15/2023");
 
     // Test string-based FormatString function with Result handling
     var validDateOnlyResult := LDT.FormatString(dt, "yyyy-MM-dd");
-    assert validDateOnlyResult.Success?;
-    assert validDateOnlyResult.value == "2023-06-15";
+    AssertAndExpect(validDateOnlyResult.Success?);
+    AssertAndExpect(validDateOnlyResult.value == "2023-06-15");
 
     var validTimeOnlyResult := LDT.FormatString(dt, "HH:mm:ss");
-    assert validTimeOnlyResult.Success?;
-    assert validTimeOnlyResult.value == "14:30:45";
+    AssertAndExpect(validTimeOnlyResult.Success?);
+    AssertAndExpect(validTimeOnlyResult.value == "14:30:45");
 
     var validISOResult := LDT.FormatString(dt, "yyyy-MM-ddTHH:mm:ss.fff");
-    assert validISOResult.Success?;
-    assert validISOResult.value == "2023-06-15T14:30:45.123";
+    AssertAndExpect(validISOResult.Success?);
+    AssertAndExpect(validISOResult.value == "2023-06-15T14:30:45.123");
 
     // Test that unsupported patterns return Failure
     var unsupportedResult1 := LDT.FormatString(dt, "yyyy/MM/dd");
-    assert unsupportedResult1.Failure?;
+    AssertAndExpect(unsupportedResult1.Failure?);
 
     var unsupportedResult2 := LDT.FormatString(dt, "custom");
-    assert unsupportedResult2.Failure?;
+    AssertAndExpect(unsupportedResult2.Failure?);
 
     var unsupportedResult3 := LDT.FormatString(dt, "dd-MM-yyyy");
-    assert unsupportedResult3.Failure?;
+    AssertAndExpect(unsupportedResult3.Failure?);
   }
 
   method {:test} TestWithNormalCase() {
     var dt1 := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
-    assert LDT.IsValidLocalDateTime(dt1);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt1));
 
     var dt1_with_new_year := LDT.WithYear(dt1, 2024);
-    assert dt1_with_new_year.year == 2024;
+    AssertAndExpect(dt1_with_new_year.year == 2024);
 
     var dt1_with_new_month := LDT.WithMonth(dt1, 2);
-    assert dt1_with_new_month.month == 2;
+    AssertAndExpect(dt1_with_new_month.month == 2);
 
     var dt1_with_new_day := LDT.WithDayOfMonth(dt1, 28);
-    assert dt1_with_new_day.day == 28;
+    AssertAndExpect(dt1_with_new_day.day == 28);
 
     var dt1_with_new_hour := LDT.WithHour(dt1, 10);
-    assert dt1_with_new_hour.hour == 10;
+    AssertAndExpect(dt1_with_new_hour.hour == 10);
 
     var dt1_with_new_minute := LDT.WithMinute(dt1, 30);
-    assert dt1_with_new_minute.minute == 30;
+    AssertAndExpect(dt1_with_new_minute.minute == 30);
 
     var dt1_with_new_second := LDT.WithSecond(dt1, 45);
-    assert dt1_with_new_second.second == 45;
+    AssertAndExpect(dt1_with_new_second.second == 45);
 
     var dt1_with_new_millisecond := LDT.WithMillisecond(dt1, 999);
-    assert dt1_with_new_millisecond.millisecond == 999;
+    AssertAndExpect(dt1_with_new_millisecond.millisecond == 999);
   }
 
   method {:test} TestWithNotNormalCase() {
@@ -265,14 +267,14 @@ module TestLocalDateTime {
 
   method {:test} TestGetters() {
     var dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
-    assert LDT.IsValidLocalDateTime(dt);
-    assert LDT.GetYear(dt) == 2023;
-    assert LDT.GetMonth(dt) == 3;
-    assert LDT.GetDay(dt) == 14;
-    assert LDT.GetHour(dt) == 15;
-    assert LDT.GetMinute(dt) == 9;
-    assert LDT.GetSecond(dt) == 26;
-    assert LDT.GetMillisecond(dt) == 535;
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
+    AssertAndExpect(LDT.GetYear(dt) == 2023);
+    AssertAndExpect(LDT.GetMonth(dt) == 3);
+    AssertAndExpect(LDT.GetDay(dt) == 14);
+    AssertAndExpect(LDT.GetHour(dt) == 15);
+    AssertAndExpect(LDT.GetMinute(dt) == 9);
+    AssertAndExpect(LDT.GetSecond(dt) == 26);
+    AssertAndExpect(LDT.GetMillisecond(dt) == 535);
   }
 
   method {:test} TestIsLeapYear() {
@@ -284,25 +286,25 @@ module TestLocalDateTime {
 
   method {:test} TestIsValidLocalDateTime() {
     var valid_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
-    assert LDT.IsValidLocalDateTime(valid_dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(valid_dt));
 
     var invalid_month_dt := LDT.LocalDateTime(2023, 13, 14, 15, 9, 26, 535);
-    assert !LDT.IsValidLocalDateTime(invalid_month_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_month_dt));
 
     var invalid_day_dt := LDT.LocalDateTime(2023, 2, 30, 15, 9, 26, 535);
-    assert !LDT.IsValidLocalDateTime(invalid_day_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_day_dt));
 
     var invalid_hour_dt := LDT.LocalDateTime(2023, 3, 14, 24, 9, 26, 535);
-    assert !LDT.IsValidLocalDateTime(invalid_hour_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_hour_dt));
 
     var invalid_minute_dt := LDT.LocalDateTime(2023, 3, 14, 15, 60, 26, 535);
-    assert !LDT.IsValidLocalDateTime(invalid_minute_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_minute_dt));
 
     var invalid_second_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 60, 535);
-    assert !LDT.IsValidLocalDateTime(invalid_second_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_second_dt));
 
     var invalid_millisecond_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 1000);
-    assert !LDT.IsValidLocalDateTime(invalid_millisecond_dt);
+    AssertAndExpect(!LDT.IsValidLocalDateTime(invalid_millisecond_dt));
   }
 
   method {:test} TestDaysInMonth() {
@@ -321,18 +323,18 @@ module TestLocalDateTime {
   method {:test} TestPlusDays() {
     // Test day overflow across month boundary
     var june29 := LDT.LocalDateTime(2023, 6, 29, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(june29);
+    AssertAndExpect(LDT.IsValidLocalDateTime(june29));
     var plusThreeDays := LDT.PlusDays(june29, 3);
-    assert LDT.IsValidLocalDateTime(plusThreeDays);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plusThreeDays));
     expect plusThreeDays.year == 2023;
     expect plusThreeDays.month == 7;
     expect plusThreeDays.day == 2;
 
     // Test day overflow across year boundary
     var dec30 := LDT.LocalDateTime(2023, 12, 30, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(dec30);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dec30));
     var plusFiveDays := LDT.PlusDays(dec30, 5);
-    assert LDT.IsValidLocalDateTime(plusFiveDays);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plusFiveDays));
     expect plusFiveDays.year == 2024;
     expect plusFiveDays.month == 1;
     expect plusFiveDays.day == 4;
@@ -341,9 +343,9 @@ module TestLocalDateTime {
   method {:test} TestPlusHours() {
     // Test hour overflow across day boundary
     var lateNight := LDT.LocalDateTime(2023, 6, 15, 22, 30, 45, 123);
-    assert LDT.IsValidLocalDateTime(lateNight);
+    AssertAndExpect(LDT.IsValidLocalDateTime(lateNight));
     var plusFiveHours := LDT.PlusHours(lateNight, 5);
-    assert LDT.IsValidLocalDateTime(plusFiveHours);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plusFiveHours));
     expect plusFiveHours.year == 2023;
     expect plusFiveHours.month == 6;
     expect plusFiveHours.day == 16;
@@ -354,9 +356,9 @@ module TestLocalDateTime {
   method {:test} TestPlusMinutes() {
     // Test minute overflow across hour boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 55, 45, 123);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var plusTenMinutes := LDT.PlusMinutes(dt, 10);
-    assert LDT.IsValidLocalDateTime(plusTenMinutes);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plusTenMinutes));
     expect plusTenMinutes.hour == 15;
     expect plusTenMinutes.minute == 5;
     expect plusTenMinutes.second == 45;
@@ -365,9 +367,9 @@ module TestLocalDateTime {
   method {:test} TestPlusSeconds() {
     // Test second overflow across minute boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 55, 123);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var plusTenSeconds := LDT.PlusSeconds(dt, 10);
-    assert LDT.IsValidLocalDateTime(plusTenSeconds);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plusTenSeconds));
     expect plusTenSeconds.minute == 31;
     expect plusTenSeconds.second == 5;
     expect plusTenSeconds.millisecond == 123;
@@ -376,9 +378,9 @@ module TestLocalDateTime {
   method {:test} TestPlusMilliseconds() {
     // Test millisecond overflow across second boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 950);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var plus100Millis := LDT.PlusMilliseconds(dt, 100);
-    assert LDT.IsValidLocalDateTime(plus100Millis);
+    AssertAndExpect(LDT.IsValidLocalDateTime(plus100Millis));
     expect plus100Millis.second == 46;
     expect plus100Millis.millisecond == 50;
   }
@@ -386,18 +388,18 @@ module TestLocalDateTime {
   method {:test} TestMinusDays() {
     // Test day underflow across month boundary
     var july2 := LDT.LocalDateTime(2023, 7, 2, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(july2);
+    AssertAndExpect(LDT.IsValidLocalDateTime(july2));
     var minusThreeDays := LDT.MinusDays(july2, 3);
-    assert LDT.IsValidLocalDateTime(minusThreeDays);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minusThreeDays));
     expect minusThreeDays.year == 2023;
     expect minusThreeDays.month == 6;
     expect minusThreeDays.day == 29;
 
     // Test day underflow across year boundary
     var jan4 := LDT.LocalDateTime(2024, 1, 4, 10, 0, 0, 0);
-    assert LDT.IsValidLocalDateTime(jan4);
+    AssertAndExpect(LDT.IsValidLocalDateTime(jan4));
     var minusFiveDays := LDT.MinusDays(jan4, 5);
-    assert LDT.IsValidLocalDateTime(minusFiveDays);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minusFiveDays));
     expect minusFiveDays.year == 2023;
     expect minusFiveDays.month == 12;
     expect minusFiveDays.day == 30;
@@ -406,9 +408,9 @@ module TestLocalDateTime {
   method {:test} TestMinusHours() {
     // Test hour underflow across day boundary
     var earlyMorning := LDT.LocalDateTime(2023, 6, 16, 3, 30, 45, 123);
-    assert LDT.IsValidLocalDateTime(earlyMorning);
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlyMorning));
     var minusFiveHours := LDT.MinusHours(earlyMorning, 5);
-    assert LDT.IsValidLocalDateTime(minusFiveHours);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minusFiveHours));
     expect minusFiveHours.year == 2023;
     expect minusFiveHours.month == 6;
     expect minusFiveHours.day == 15;
@@ -419,9 +421,9 @@ module TestLocalDateTime {
   method {:test} TestMinusMinutes() {
     // Test minute underflow across hour boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 15, 5, 45, 123);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var minusTenMinutes := LDT.MinusMinutes(dt, 10);
-    assert LDT.IsValidLocalDateTime(minusTenMinutes);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minusTenMinutes));
     expect minusTenMinutes.hour == 14;
     expect minusTenMinutes.minute == 55;
     expect minusTenMinutes.second == 45;
@@ -430,9 +432,9 @@ module TestLocalDateTime {
   method {:test} TestMinusSeconds() {
     // Test second underflow across minute boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 31, 5, 123);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var minusTenSeconds := LDT.MinusSeconds(dt, 10);
-    assert LDT.IsValidLocalDateTime(minusTenSeconds);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minusTenSeconds));
     expect minusTenSeconds.minute == 30;
     expect minusTenSeconds.second == 55;
     expect minusTenSeconds.millisecond == 123;
@@ -441,9 +443,9 @@ module TestLocalDateTime {
   method {:test} TestMinusMilliseconds() {
     // Test millisecond underflow across second boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 50);
-    assert LDT.IsValidLocalDateTime(dt);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt));
     var minus100Millis := LDT.MinusMilliseconds(dt, 100);
-    assert LDT.IsValidLocalDateTime(minus100Millis);
+    AssertAndExpect(LDT.IsValidLocalDateTime(minus100Millis));
     expect minus100Millis.second == 45;
     expect minus100Millis.millisecond == 950;
   }
@@ -456,32 +458,32 @@ module TestLocalDateTime {
     var dt4 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 123); // 1s later
     var dt5 := LDT.LocalDateTime(2023, 6, 16, 14, 30, 45, 123); // 1 day later
 
-    assert LDT.IsValidLocalDateTime(dt1);
-    assert LDT.IsValidLocalDateTime(dt2);
-    assert LDT.IsValidLocalDateTime(dt3);
-    assert LDT.IsValidLocalDateTime(dt4);
-    assert LDT.IsValidLocalDateTime(dt5);
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt1));
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt2));
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt3));
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt4));
+    AssertAndExpect(LDT.IsValidLocalDateTime(dt5));
 
     // Test IsBefore
-    assert LDT.IsBefore(dt1, dt2); // dt1 is before dt2 (1ms difference)
-    assert LDT.IsBefore(dt1, dt4); // dt1 is before dt4 (1s difference)
-    assert LDT.IsBefore(dt1, dt5); // dt1 is before dt5 (1 day difference)
-    assert !LDT.IsBefore(dt1, dt3); // dt1 is not before dt3 (same time)
-    assert !LDT.IsBefore(dt2, dt1); // dt2 is not before dt1
+    AssertAndExpect(LDT.IsBefore(dt1, dt2)); // dt1 is before dt2 (1ms difference)
+    AssertAndExpect(LDT.IsBefore(dt1, dt4)); // dt1 is before dt4 (1s difference)
+    AssertAndExpect(LDT.IsBefore(dt1, dt5)); // dt1 is before dt5 (1 day difference)
+    AssertAndExpect(!LDT.IsBefore(dt1, dt3)); // dt1 is not before dt3 (same time)
+    AssertAndExpect(!LDT.IsBefore(dt2, dt1)); // dt2 is not before dt1
 
     // Test IsAfter
-    assert LDT.IsAfter(dt2, dt1); // dt2 is after dt1
-    assert LDT.IsAfter(dt4, dt1); // dt4 is after dt1
-    assert LDT.IsAfter(dt5, dt1); // dt5 is after dt1
-    assert !LDT.IsAfter(dt1, dt3); // dt1 is not after dt3 (same time)
-    assert !LDT.IsAfter(dt1, dt2); // dt1 is not after dt2
+    AssertAndExpect(LDT.IsAfter(dt2, dt1)); // dt2 is after dt1
+    AssertAndExpect(LDT.IsAfter(dt4, dt1)); // dt4 is after dt1
+    AssertAndExpect(LDT.IsAfter(dt5, dt1)); // dt5 is after dt1
+    AssertAndExpect(!LDT.IsAfter(dt1, dt3)); // dt1 is not after dt3 (same time)
+    AssertAndExpect(!LDT.IsAfter(dt1, dt2)); // dt1 is not after dt2
 
     // Test IsEqual
-    assert LDT.IsEqual(dt1, dt3); // dt1 equals dt3
-    assert LDT.IsEqual(dt3, dt1); // dt3 equals dt1 (symmetric)
-    assert !LDT.IsEqual(dt1, dt2); // dt1 does not equal dt2
-    assert !LDT.IsEqual(dt1, dt4); // dt1 does not equal dt4
-    assert !LDT.IsEqual(dt1, dt5); // dt1 does not equal dt5
+    AssertAndExpect(LDT.IsEqual(dt1, dt3)); // dt1 equals dt3
+    AssertAndExpect(LDT.IsEqual(dt3, dt1)); // dt3 equals dt1 (symmetric)
+    AssertAndExpect(!LDT.IsEqual(dt1, dt2)); // dt1 does not equal dt2
+    AssertAndExpect(!LDT.IsEqual(dt1, dt4)); // dt1 does not equal dt4
+    AssertAndExpect(!LDT.IsEqual(dt1, dt5)); // dt1 does not equal dt5
 
     // Test edge cases with different components
     var earlyYear := LDT.LocalDateTime(2022, 6, 15, 14, 30, 45, 123);
@@ -492,22 +494,22 @@ module TestLocalDateTime {
     var earlierSecond := LDT.LocalDateTime(2023, 6, 15, 14, 30, 44, 123);
     var earlierMs := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 122);
 
-    assert LDT.IsValidLocalDateTime(earlyYear);
-    assert LDT.IsValidLocalDateTime(laterMonth);
-    assert LDT.IsValidLocalDateTime(earlierDay);
-    assert LDT.IsValidLocalDateTime(earlierHour);
-    assert LDT.IsValidLocalDateTime(earlierMinute);
-    assert LDT.IsValidLocalDateTime(earlierSecond);
-    assert LDT.IsValidLocalDateTime(earlierMs);
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlyYear));
+    AssertAndExpect(LDT.IsValidLocalDateTime(laterMonth));
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlierDay));
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlierHour));
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlierMinute));
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlierSecond));
+    AssertAndExpect(LDT.IsValidLocalDateTime(earlierMs));
 
     // Test different component comparisons
-    assert LDT.IsBefore(earlyYear, dt1); // Earlier year
-    assert LDT.IsAfter(laterMonth, dt1); // Later month
-    assert LDT.IsBefore(earlierDay, dt1); // Earlier day
-    assert LDT.IsBefore(earlierHour, dt1); // Earlier hour
-    assert LDT.IsBefore(earlierMinute, dt1); // Earlier minute
-    assert LDT.IsBefore(earlierSecond, dt1); // Earlier second
-    assert LDT.IsBefore(earlierMs, dt1); // Earlier millisecond
+    AssertAndExpect(LDT.IsBefore(earlyYear, dt1)); // Earlier year
+    AssertAndExpect(LDT.IsAfter(laterMonth, dt1)); // Later month
+    AssertAndExpect(LDT.IsBefore(earlierDay, dt1)); // Earlier day
+    AssertAndExpect(LDT.IsBefore(earlierHour, dt1)); // Earlier hour
+    AssertAndExpect(LDT.IsBefore(earlierMinute, dt1)); // Earlier minute
+    AssertAndExpect(LDT.IsBefore(earlierSecond, dt1)); // Earlier second
+    AssertAndExpect(LDT.IsBefore(earlierMs, dt1)); // Earlier millisecond
   }
 }
 
