@@ -8,7 +8,7 @@ module TestLocalDateTime {
   import Duration = Duration
   import DTUtils = DateTimeUtils
 
-  method TestOfFunction()
+  method {:test} TestOfFunction()
   {
     var result1 := LDT.Of(2023, 6, 15, 14, 30, 45, 123);
     if result1.Success? {
@@ -49,7 +49,7 @@ module TestLocalDateTime {
     expect invalidMs.Failure?;
   }
 
-  method TestParseFunction()
+  method {:test} TestParseFunction()
   {
     var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ParseFormat.ISO8601);
     if validResult1.Success? {
@@ -86,7 +86,7 @@ module TestLocalDateTime {
     assert invalidFormat12.Failure?;
   }
 
-  method TestDateOnlyParsing()
+  method {:test} TestDateOnlyParsing()
   {
     // Test valid DateOnly parsing - simplified to avoid verification timeout
     var validDateOnly1 := LDT.Parse("2023-06-15", LDT.ParseFormat.DateOnly);
@@ -129,7 +129,7 @@ module TestLocalDateTime {
     expect invalidDateOnly11.Failure?;
   }
 
-  method TestCompareFunction()
+  method {:test} TestCompareFunction()
   {
     var dt1 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
     var dt2 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 124);
@@ -144,7 +144,7 @@ module TestLocalDateTime {
     assert cmp3 == 0;   // dt1 == dt3
   }
 
-  method TestArithmeticFunctions()
+  method {:test} TestArithmeticFunctions()
   {
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
     var duration := Duration.FromMilliseconds(3661500); // 1 hour, 1 minute, 1 second, 500ms
@@ -170,7 +170,7 @@ module TestLocalDateTime {
     expect LDT.GetMinute(nextDay) == 30;
   }
 
-  method TestFormatFunction()
+  method {:test} TestFormatFunction()
   {
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
 
@@ -221,8 +221,7 @@ module TestLocalDateTime {
     assert unsupportedResult3.Failure?;
   }
 
-
-  method TestWithNormalCase() {
+  method {:test} TestWithNormalCase() {
     var dt1 := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
     assert LDT.IsValidLocalDateTime(dt1);
 
@@ -248,7 +247,7 @@ module TestLocalDateTime {
     assert dt1_with_new_millisecond.millisecond == 999;
   }
 
-  method TestWithNotNormalCase() {
+  method {:test} TestWithNotNormalCase() {
     var dt1 := LDT.LocalDateTime(2020, 2, 29, 15, 9, 26, 535);
     expect LDT.IsValidLocalDateTime(dt1);
 
@@ -264,7 +263,7 @@ module TestLocalDateTime {
     expect dt2_with_new_month.day == 30; // Clamped to 30 since April has 30 days
   }
 
-  method TestGetters() {
+  method {:test} TestGetters() {
     var dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
     assert LDT.IsValidLocalDateTime(dt);
     assert LDT.GetYear(dt) == 2023;
@@ -276,14 +275,14 @@ module TestLocalDateTime {
     assert LDT.GetMillisecond(dt) == 535;
   }
 
-  method TestIsLeapYear() {
+  method {:test} TestIsLeapYear() {
     expect DTUtils.IsLeapYear(2020); // Divisible by 4 and not by 100
     expect !DTUtils.IsLeapYear(2021); // Not divisible by 4
     expect !DTUtils.IsLeapYear(1900); // Divisible by 100 but not by 400
     expect DTUtils.IsLeapYear(2000); // Divisible by 400
   }
 
-  method TestIsValidLocalDateTime() {
+  method {:test} TestIsValidLocalDateTime() {
     var valid_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
     assert LDT.IsValidLocalDateTime(valid_dt);
 
@@ -306,7 +305,7 @@ module TestLocalDateTime {
     assert !LDT.IsValidLocalDateTime(invalid_millisecond_dt);
   }
 
-  method TestDaysInMonth() {
+  method {:test} TestDaysInMonth() {
     expect DTUtils.DaysInMonth(2023, 1) == 31;
     expect DTUtils.DaysInMonth(2023, 2) == 28;
     expect DTUtils.DaysInMonth(2020, 2) == 29; // Leap year
@@ -314,12 +313,12 @@ module TestLocalDateTime {
     expect DTUtils.DaysInMonth(2023, 12) == 31;
   }
 
-  method TestDaysInYear() {
+  method {:test} TestDaysInYear() {
     expect DTUtils.DaysInYear(2023) == 365;
     expect DTUtils.DaysInYear(2020) == 366; // Leap year
   }
 
-  method TestPlusDays() {
+  method {:test} TestPlusDays() {
     // Test day overflow across month boundary
     var june29 := LDT.LocalDateTime(2023, 6, 29, 10, 0, 0, 0);
     assert LDT.IsValidLocalDateTime(june29);
@@ -339,7 +338,7 @@ module TestLocalDateTime {
     expect plusFiveDays.day == 4;
   }
 
-  method TestPlusHours() {
+  method {:test} TestPlusHours() {
     // Test hour overflow across day boundary
     var lateNight := LDT.LocalDateTime(2023, 6, 15, 22, 30, 45, 123);
     assert LDT.IsValidLocalDateTime(lateNight);
@@ -352,7 +351,7 @@ module TestLocalDateTime {
     expect plusFiveHours.minute == 30;
   }
 
-  method TestPlusMinutes() {
+  method {:test} TestPlusMinutes() {
     // Test minute overflow across hour boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 55, 45, 123);
     assert LDT.IsValidLocalDateTime(dt);
@@ -363,7 +362,7 @@ module TestLocalDateTime {
     expect plusTenMinutes.second == 45;
   }
 
-  method TestPlusSeconds() {
+  method {:test} TestPlusSeconds() {
     // Test second overflow across minute boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 55, 123);
     assert LDT.IsValidLocalDateTime(dt);
@@ -374,7 +373,7 @@ module TestLocalDateTime {
     expect plusTenSeconds.millisecond == 123;
   }
 
-  method TestPlusMilliseconds() {
+  method {:test} TestPlusMilliseconds() {
     // Test millisecond overflow across second boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 950);
     assert LDT.IsValidLocalDateTime(dt);
@@ -384,9 +383,7 @@ module TestLocalDateTime {
     expect plus100Millis.millisecond == 50;
   }
 
-
-
-  method TestMinusDays() {
+  method {:test} TestMinusDays() {
     // Test day underflow across month boundary
     var july2 := LDT.LocalDateTime(2023, 7, 2, 10, 0, 0, 0);
     assert LDT.IsValidLocalDateTime(july2);
@@ -406,7 +403,7 @@ module TestLocalDateTime {
     expect minusFiveDays.day == 30;
   }
 
-  method TestMinusHours() {
+  method {:test} TestMinusHours() {
     // Test hour underflow across day boundary
     var earlyMorning := LDT.LocalDateTime(2023, 6, 16, 3, 30, 45, 123);
     assert LDT.IsValidLocalDateTime(earlyMorning);
@@ -419,7 +416,7 @@ module TestLocalDateTime {
     expect minusFiveHours.minute == 30;
   }
 
-  method TestMinusMinutes() {
+  method {:test} TestMinusMinutes() {
     // Test minute underflow across hour boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 15, 5, 45, 123);
     assert LDT.IsValidLocalDateTime(dt);
@@ -430,7 +427,7 @@ module TestLocalDateTime {
     expect minusTenMinutes.second == 45;
   }
 
-  method TestMinusSeconds() {
+  method {:test} TestMinusSeconds() {
     // Test second underflow across minute boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 31, 5, 123);
     assert LDT.IsValidLocalDateTime(dt);
@@ -441,7 +438,7 @@ module TestLocalDateTime {
     expect minusTenSeconds.millisecond == 123;
   }
 
-  method TestMinusMilliseconds() {
+  method {:test} TestMinusMilliseconds() {
     // Test millisecond underflow across second boundary
     var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 50);
     assert LDT.IsValidLocalDateTime(dt);
@@ -451,7 +448,7 @@ module TestLocalDateTime {
     expect minus100Millis.millisecond == 950;
   }
 
-  method TestComparisonMethods() {
+  method {:test} TestComparisonMethods() {
     // Create test date times
     var dt1 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
     var dt2 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 124); // 1ms later
