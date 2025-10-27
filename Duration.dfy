@@ -6,8 +6,8 @@ module Duration {
   import opened Std.Collections.Seq
   //import opened Wrappers
   datatype Duration = Duration(
-    seconds: nat,  // 0 <= seconds < 9999year * seconds per day
-    millis: nat       // 0 <= millis < 1000
+    seconds: nat, 
+    millis: nat     
   )
 
  function EpochDifference(epoch1: int, epoch2: int): Duration
