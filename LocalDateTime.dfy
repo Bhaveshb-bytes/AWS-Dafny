@@ -260,16 +260,16 @@ module LocalDateTime {
     CompareLocal(dt1, dt2) == 0
   }
 
-  // Now function which returns current local date time
-  function Now(): Result<LocalDateTime, string>
-    ensures Now().Success? ==> IsValidLocalDateTime(Now().value)
+  // Now method which returns current local date time
+  method Now() returns (result: Result<LocalDateTime, string>)
+    ensures result.Success? ==> IsValidLocalDateTime(result.value)
   {
-    var components := DTUtils.GetNowComponentsFunc();
-    if |components| == 7 &&
-       DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16) then
-      Success(FromSequenceComponents(components))
-    else
-      Failure("Failed to get current time components")
+    var components := DTUtils.GetNowComponents();
+    if |components| == 7 && DTUtils.IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16) {
+      result := Success(FromSequenceComponents(components));
+    } else {
+      result := Failure("Failed to get current time components");
+    }
   }
 
   // Creation functions

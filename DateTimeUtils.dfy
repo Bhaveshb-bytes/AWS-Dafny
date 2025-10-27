@@ -19,13 +19,10 @@ module DateTimeUtils {
     ensures var components := FromEpochTimeMillisecondsFunc(epochMillis);
             IsValidDateTime(components[0], components[1] as uint8, components[2] as uint8, components[3] as uint8, components[4] as uint8, components[5] as uint8, components[6] as uint16)
 
-  // External function for getting current time components
-  function {:extern "DateTimeImpl", "GetNowComponents"}
-    {:axiom} GetNowComponentsFunc(): seq<int32>
-    ensures |GetNowComponentsFunc()| == 7
-    ensures var components := GetNowComponentsFunc();
-            MIN_YEAR <= components[0] <= MAX_YEAR && // year as int32
-            forall i :: 1 <= i < |components| ==> 0 <= components[i] <= 65535
+  // External method for getting current time components
+  method {:extern "DateTimeImpl", "GetNowComponents"}
+    {:axiom} GetNowComponents() returns (components: seq<int32>)
+    ensures |components| == 7
 
   // Leap year calculation using extern implementation
   function {:extern "DateTimeImpl", "IsLeapYear"}

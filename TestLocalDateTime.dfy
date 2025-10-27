@@ -116,20 +116,17 @@ module TestLocalDateTime {
     var invalidDateOnly11 := LDT.Parse("not-a-date", LDT.ParseFormat.DateOnly);     // Invalid format
 
     // Verify DateOnly format failures
-    assert invalidDateOnly1.Failure?;
-    assert invalidDateOnly2.Failure?;
-    assert invalidDateOnly3.Failure?;
-    assert invalidDateOnly4.Failure?;
-    assert invalidDateOnly5.Failure?;
-    assert invalidDateOnly6.Failure?;
-    assert invalidDateOnly7.Failure?;
-    assert invalidDateOnly8.Failure?;
-    assert invalidDateOnly9.Failure?;
-    assert invalidDateOnly10.Failure?;
-    assert invalidDateOnly11.Failure?;
-
-    // Note: Parse function now only supports ISO8601 and DateOnly formats
-    // Other formats are not supported in the Parse function API
+    expect invalidDateOnly1.Failure?;
+    expect invalidDateOnly2.Failure?;
+    expect invalidDateOnly3.Failure?;
+    expect invalidDateOnly4.Failure?;
+    expect invalidDateOnly5.Failure?;
+    expect invalidDateOnly6.Failure?;
+    expect invalidDateOnly7.Failure?;
+    expect invalidDateOnly8.Failure?;
+    expect invalidDateOnly9.Failure?;
+    expect invalidDateOnly10.Failure?;
+    expect invalidDateOnly11.Failure?;
   }
 
   method TestCompareFunction()
