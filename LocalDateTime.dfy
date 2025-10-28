@@ -371,7 +371,6 @@ module LocalDateTime {
     DTUtils.PadWithZeros(millisecond, 3)
   }
 
-  // Type-safe format function using DateFormat datatype
   function Format(dt: LocalDateTime, format: DateFormat): string
     requires IsValidLocalDateTime(dt)
   {
@@ -384,25 +383,5 @@ module LocalDateTime {
                            DTUtils.PadWithZeros(hour, 2) + ":" + DTUtils.PadWithZeros(minute, 2) + ":" + DTUtils.PadWithZeros(second, 2)
       case DateSlashDDMMYYYY => DTUtils.PadWithZeros(day, 2) + "/" + DTUtils.PadWithZeros(month, 2) + "/" + OfInt(year)
       case DateSlashMMDDYYYY => DTUtils.PadWithZeros(month, 2) + "/" + DTUtils.PadWithZeros(day, 2) + "/" + OfInt(year)
-  }
-
-  // String-based format function that returns Result for backwards compatibility
-  function FormatString(dt: LocalDateTime, pattern: string): Result<string, string>
-    requires IsValidLocalDateTime(dt)
-  {
-    if pattern == "yyyy-MM-ddTHH:mm:ss.fff" then
-      Success(Format(dt, DateFormat.ISO8601))
-    else if pattern == "yyyy-MM-dd" then
-      Success(Format(dt, DateFormat.DateOnly))
-    else if pattern == "HH:mm:ss" then
-      Success(Format(dt, DateFormat.TimeOnly))
-    else if pattern == "yyyy-MM-dd HH:mm:ss" then
-      Success(Format(dt, DateFormat.DateTimeSpace))
-    else if pattern == "dd/MM/yyyy" then
-      Success(Format(dt, DateFormat.DateSlashDDMMYYYY))
-    else if pattern == "MM/dd/yyyy" then
-      Success(Format(dt, DateFormat.DateSlashMMDDYYYY))
-    else
-      Failure("Unsupported format pattern: " + pattern)
   }
 }

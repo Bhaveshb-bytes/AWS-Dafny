@@ -198,29 +198,6 @@ module TestLocalDateTime {
 
     var mmddyyyy := LDT.Format(dt, LDT.DateFormat.DateSlashMMDDYYYY);
     AssertAndExpect(mmddyyyy == "06/15/2023");
-
-    // Test string-based FormatString function with Result handling
-    var validDateOnlyResult := LDT.FormatString(dt, "yyyy-MM-dd");
-    AssertAndExpect(validDateOnlyResult.Success?);
-    AssertAndExpect(validDateOnlyResult.value == "2023-06-15");
-
-    var validTimeOnlyResult := LDT.FormatString(dt, "HH:mm:ss");
-    AssertAndExpect(validTimeOnlyResult.Success?);
-    AssertAndExpect(validTimeOnlyResult.value == "14:30:45");
-
-    var validISOResult := LDT.FormatString(dt, "yyyy-MM-ddTHH:mm:ss.fff");
-    AssertAndExpect(validISOResult.Success?);
-    AssertAndExpect(validISOResult.value == "2023-06-15T14:30:45.123");
-
-    // Test that unsupported patterns return Failure
-    var unsupportedResult1 := LDT.FormatString(dt, "yyyy/MM/dd");
-    AssertAndExpect(unsupportedResult1.Failure?);
-
-    var unsupportedResult2 := LDT.FormatString(dt, "custom");
-    AssertAndExpect(unsupportedResult2.Failure?);
-
-    var unsupportedResult3 := LDT.FormatString(dt, "dd-MM-yyyy");
-    AssertAndExpect(unsupportedResult3.Failure?);
   }
 
   method {:test} TestWithNormalCase() {
