@@ -9,14 +9,13 @@ The new logic first converts the LocalDateTime to an epoch time in milliseconds.
 ## Execute Verification
 
 ```
-dafny test --target:cs --standard-libraries LocalDateTime.dfy TestLocalDateTime.dfy  DateTimeImpl.cs --allow-warnings
+dafny test --target:cs --standard-libraries LocalDateTime.dfy LocalDateTimeExamples.dfy  DateTimeImpl.cs --allow-warnings
 ```
 
 ## Run Test
 ```
-dafny build TestLocalDateTime.dfy --target:cs TestLocalDateTime.dfy DateTimeImpl.cs --standard-libraries
-
-./TestLocalDateTime
+dafny build LocalDateTimeExamples.dfy --target:cs LocalDateTimeExamples.dfy DateTimeImpl.cs --standard-libraries
+./LocalDateTimeExamples
 ```
 
 # Duration
