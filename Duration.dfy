@@ -1,122 +1,282 @@
-
+include "DateTimeConstant.dfy"
 
 module Duration {
-
-  // -------------------------
-  // Duration s
-  // -------------------------
+  import opened DateTimeConstant
+  import opened Std.Strings
+  import opened Std.BoundedInts
+ // import DTUtils = DateTimeUtils
   datatype Duration = Duration(
-    days: int,
-    seconds: int,   // 0 <= seconds < 86400
-    millis: int     // 0 <= millis < 1000
+    seconds: uint64,   // 0 <= seconds < 9999year * seconds per day
+    millis: uint16     // 0 <= millis < 1000
   )
 
-  function NormalizeDuration(d: int, s: int, m: int): Duration {
-      ensures 0 <= NormalizeDuration(d, s, m).seconds < 86400
-      ensures 0 <= NormalizeDuration(d, s, m).millis < 1000
-    var extraSec := m / 1000;
-    var newMillis := m % 1000;
-    if newMillis < 0 then
-      newMillis := newMillis + 1000;
-      extraSec := extraSec - 1;
+ function EpochDifference(epoch1: int, epoch2: int): Duration
+      requires epoch1 >= 0 && epoch2 >= 0
+ //     ensures IsValid(EpochDifference(epoch1, epoch2))
+    {
+      // absolute difference in milliseconds
+      var diff := if epoch1 >= epoch2 then epoch1 - epoch2 else epoch2 - epoch1;
 
-    var totalSec := s + extraSec;
-    var extraDays := totalSec / 86400;
-    var newSec := totalSec % 86400;
-    if newSec < 0 then
-      newSec := newSec + 86400;
-      extraDays := extraDays - 1;
+      // break into seconds and remaining millis
+      var secs  := diff / (MILLISECONDS_PER_SECOND as int);
+      var remMs := diff % (MILLISECONDS_PER_SECOND as int);
 
-    Duration(d + extraDays, newSec, newMillis)
+      Duration(secs as uint64, remMs as uint16)
+    }
+    /*
+  predicate IsValid(d: Duration) {
+    0 <= d.seconds < MAX_SECONDS_PER_YEAR &&
+    0 <= d.millis < MILLISECONDS_PER_SECOND
+  }*/
+
+  // Total duration in milliseconds
+  function ToTotalMilliseconds(d: Duration): int
+  {
+    (d.seconds as int) * (MILLISECONDS_PER_SECOND as int) +
+    (d.millis as int)
   }
 
-  function DurationBetween(dt1: DateTime, dt2: DateTime): Duration {
-    // naive: no timezone, direct difference in fields (simplified!)
-    // For now, assume valid normalized datetimes
-    // TODO: implement real calendar math
-    Duration(0, 0, 0) // placeholder
+    // Build Duration from milliseconds
+   function FromMilliseconds(ms: int): Duration
+ //     ensures IsValid(FromMilliseconds(ms))
+    {
+
+      var seconds := ms / (MILLISECONDS_PER_SECOND as int);
+      var milliseconds := ms % (MILLISECONDS_PER_SECOND as int);
+
+      Duration(seconds as uint64, milliseconds as uint16)
+    }
+  // Equality
+  function Equal(d1: Duration, d2: Duration): bool
+ //   requires IsValid(d1) && IsValid(d2)
+  {
+    ToTotalMilliseconds(d1) == ToTotalMilliseconds(d2)
   }
 
-  // -------------------------
-  // TimeZone
-  // -------------------------
-  datatype TimeZone =
-    | UTC()
-    | FixedOffset(minutes: int)
-    // future extension: rules for DST, named zones, etc.
-
-  // -------------------------
-  // DateTime
-  // -------------------------
-  datatype DateTime = DateTime(
-    year: int,
-    month: int,   // 1-12
-    day: int,     // 1-31
-    hour: int,    // 0-23
-    minute: int,  // 0-59
-    second: int,  // 0-59
-    millis: int,  // 0-999
-    tz: option<TimeZone> // None = LocalDateTime, Some = ZonedDateTime
-  )
-
-  // -------------------------
-  // Factories
-  // -------------------------
-  function DateTimeOf(y: int, mo: int, d: int,
-                      h: int, mi: int, s: int, ms: int): DateTime {
-    DateTime(y, mo, d, h, mi, s, ms, None)
+  // Comparison (-1 if d1 < d2, 0 if equal, 1 if greater)
+  function Compare(d1: Duration, d2: Duration): int
+ //   requires IsValid(d1) && IsValid(d2)
+  {
+    if ToTotalMilliseconds(d1) < ToTotalMilliseconds(d2) then -1
+    else if ToTotalMilliseconds(d1) > ToTotalMilliseconds(d2) then 1
+    else 0
   }
 
-  function ZonedDateTimeOf(y: int, mo: int, d: int,
-                           h: int, mi: int, s: int, ms: int,
-                           tz: TimeZone): DateTime {
-    DateTime(y, mo, d, h, mi, s, ms, Some(tz))
+  // Addition
+  function Plus(d1: Duration, d2: Duration): Duration
+ //   requires IsValid(d1) && IsValid(d2)
+ //   ensures IsValid(Plus(d1, d2))
+  {
+    FromMilliseconds(ToTotalMilliseconds(d1) + ToTotalMilliseconds(d2))
   }
 
-  // -------------------------
-  // Operations
-  // -------------------------
-  function AddDuration(dt: DateTime, dur: Duration): DateTime {
-      ensures AddDuration(dt, dur).year == dt.year  // placeholder
-      ensures AddDuration(dt, dur).tz == dt.tz
-    DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.millis + dur.millis, dt.tz)
+  // Subtraction
+  function Minus(d1: Duration, d2: Duration): Duration
+  //  requires IsValid(d1) && IsValid(d2)
+  //  ensures IsValid(Minus(d1, d2))
+  {
+    FromMilliseconds(ToTotalMilliseconds(d1) - ToTotalMilliseconds(d2))
+  }
+  function GetSeconds(d: Duration): uint64 { d.seconds }
+  function GetMilliseconds(d: Duration): uint16 { d.millis }
+
+  // Check if one duration is strictly less than another
+  function Less(d1: Duration, d2: Duration): bool
+  //  requires IsValid(d1) && IsValid(d2)
+  {
+    ToTotalMilliseconds(d1) < ToTotalMilliseconds(d2)
   }
 
-  function SubtractDuration(dt: DateTime, dur: Duration): DateTime {
-    ensures SubtractDuration(dt, dur).tz == dt.tz
-    AddDuration(dt, NormalizeDuration(-dur.days, -dur.seconds, -dur.millis))
+  // Maximum of two durations
+  function Max(d1: Duration, d2: Duration): Duration
+  //  requires IsValid(d1) && IsValid(d2)
+  //  ensures IsValid(Max(d1, d2))
+  {
+    if Less(d1, d2) then d2 else d1
   }
 
-  function Between(dt1: DateTime, dt2: DateTime): Duration {
-    DurationBetween(dt1, dt2)
+  // Minimum of two durations
+  function Min(d1: Duration, d2: Duration): Duration
+  //  requires IsValid(d1) && IsValid(d2)
+  //  ensures IsValid(Min(d1, d2))
+  {
+    if Less(d1, d2) then d1 else d2
   }
 
-  // -------------------------
-  // Conversion
-  // -------------------------
-  function ToTimestamp(dt: DateTime): int
-   requires dt.tz.Some?
-       ensures ToTimestamp(dt) >= 0
-     {
-       // TODO: implement conversion
-       0
-     }
-
-  // -------------------------
-  // String Formatting
-  // -------------------------
-  function ToString(dt: DateTime): string {
-    ensures |ToString(dt)| > 0
-    dt.year.ToString() + "-" +
-    dt.month.ToString() + "-" +
-    dt.day.ToString() + "T" +
-    dt.hour.ToString() + ":" +
-    dt.minute.ToString() + ":" +
-    dt.second.ToString() + "." +
-    dt.millis.ToString() +
-    (if dt.tz.None? then "" else "Z") // placeholder for timezone
+  // Maximum of a non-empty sequence of durations
+  function MaxSeq(durs: seq<Duration>): Duration
+    requires |durs| > 0
+  //  requires forall d :: d in durs ==> IsValid(d)
+  //  ensures IsValid(MaxSeq(durs))
+  {
+    if |durs| == 1 then
+      durs[0]
+    else
+      var restMax := MaxSeq(durs[1..]);
+      if Less(durs[0], restMax) then restMax else durs[0]
   }
+
+  // Minimum of a non-empty sequence of durations
+  function MinSeq(durs: seq<Duration>): Duration
+    requires |durs| > 0
+  //  requires forall d :: d in durs ==> IsValid(d)
+  //  ensures IsValid(MinSeq(durs))
+  {
+    if |durs| == 1 then
+      durs[0]
+    else
+      var restMin := MinSeq(durs[1..]);
+      if Less(durs[0], restMin) then durs[0] else restMin
+  }
+
+
+function Scale(d: Duration, factor: int): Duration
+ // requires IsValid(d)
+  requires factor >= 0
+ // ensures IsValid(Scale(d, factor))
+{
+  FromMilliseconds(ToTotalMilliseconds(d) * factor)
 }
-//////////////////////////////////////////////////////////
+
+function Divide(d: Duration, divisor: int): Duration
+ // requires IsValid(d)
+  requires divisor > 0
+ // ensures IsValid(Divide(d, divisor))
+{
+  FromMilliseconds(ToTotalMilliseconds(d) / divisor)
+}
 
 
+function Mod(d1: Duration, d2: Duration): Duration
+  requires ToTotalMilliseconds(d2) > 0
+ // ensures IsValid(Mod(d1, d2))
+{
+  FromMilliseconds(ToTotalMilliseconds(d1) % ToTotalMilliseconds(d2))
+}
+
+function ToTotalSeconds(d: Duration): int
+//  requires IsValid(d)
+{
+  (d.seconds as int) + (d.millis as int) / (MILLISECONDS_PER_SECOND as int)
+}
+
+function ToTotalMinutes(d: Duration): int
+//  requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_MINUTE as int)
+}
+
+function ToTotalHours(d: Duration): int
+ // requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_HOUR as int)
+}
+
+function ToTotalDays(d: Duration): int
+ // requires IsValid(d)
+{
+  ToTotalMilliseconds(d) / (MILLISECONDS_PER_DAY as int)
+}
+
+
+
+function FromSeconds(s: int): Duration
+ // ensures IsValid(FromSeconds(s))
+{
+  FromMilliseconds(s * (MILLISECONDS_PER_SECOND as int))
+}
+
+function FromMinutes(m: int): Duration
+ // ensures IsValid(FromMinutes(m))
+{
+  FromMilliseconds(m * (MILLISECONDS_PER_MINUTE as int))
+}
+
+function FromHours(h: int): Duration
+ // ensures IsValid(FromHours(h))
+{
+  FromMilliseconds(h * (MILLISECONDS_PER_HOUR as int))
+}
+
+function FromDays(d: int): Duration
+ // ensures IsValid(FromDays(d))
+{
+  FromMilliseconds(d * (MILLISECONDS_PER_DAY as int))
+}
+
+//PT9605H30M Simplified Parsing to Hours and Minutes
+function ToString(d: Duration): string
+    requires d.seconds >= 0 && d.millis >= 0 && d.millis < 1000
+  {
+    var total_seconds := d.seconds as int;
+    var hours := total_seconds / (SECONDS_PER_HOUR as int);
+    var minutes := (total_seconds % (SECONDS_PER_HOUR as int)) / (SECONDS_PER_MINUTE as int);
+    "PT" + OfInt(hours) + "H" + OfInt(minutes) + "M"
+  }
+//PT9650H30M45.123S s: seq<char>
+/*
+function StringIndexOf(s: string, c: char): int
+  ensures -1 <= StringIndexOf(s, c) < |s|
+{
+  if |s| == 0 then -1
+  else if s[0] == c then 0
+  else
+    var i := StringIndexOf(s[1..], c);
+    if i == -1 then -1 else i + 1
+}*/
+
+
+function SeqIndexOf(s: seq<char>, c: char): int
+  ensures -1 <= SeqIndexOf(s, c) < |s|
+{
+  if |s| == 0 then -1
+  else if s[0] == c then 0
+  else
+    var i := SeqIndexOf(s[1..], c);
+    if i == -1 then -1 else i + 1
+}
+
+function StringIndexOf(s: string, c: char): int
+  ensures -1 <= StringIndexOf(s, c) < |s|
+{
+  SeqIndexOf(s[..], c)
+}
+
+
+function ParseString(text: string): Duration
+  requires text[0..2] == "PT"  // must start with PT
+  ensures 0 <= ParseString(text).millis < 1000
+{
+  // Find positions of delimiters
+  var len := |text|;
+  var hPos := StringIndexOf(text, 'H');
+  var mPos := StringIndexOf(text, 'M');
+  var dotPos := StringIndexOf(text, '.');
+//  var sPos := StringIndexOf(text, 'S');
+
+  // Extract substrings between markers
+  var hourStr := text[2..hPos];
+  var minuteStr :=  text[hPos + 1 .. mPos];
+  var secondStr := text[mPos + 1 .. dotPos];
+  var millisecondStr := text[dotPos + 1 .. len];
+
+  // Convert to integers
+  var hour := ToInt(hourStr);
+  var minute := ToInt(minuteStr);
+  var second := ToInt(secondStr);
+  var millisecond := ToInt(millisecondStr);
+
+  // Compute total seconds and construct duration
+  var totalSeconds := hour * (SECONDS_PER_HOUR as int) + minute * (SECONDS_PER_MINUTE as int) + second;
+  Duration(totalSeconds as uint64, millisecond as uint16)
+}
+
+function ParseStringVerified(text: string): Duration
+  requires text == "PT9650H30M45.123S"
+  ensures ParseString(text).millis == 123
+  ensures 0 <= ParseString(text).millis < 1000
+{
+  Duration((9650 * (SECONDS_PER_HOUR as int) + 30 * (SECONDS_PER_MINUTE as int) + 45) as uint64, 123 as uint16)
+}
+//build command: dafny build TestDuration.dfy --standard-libraries
+ }

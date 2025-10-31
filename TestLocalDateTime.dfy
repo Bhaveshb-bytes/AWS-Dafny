@@ -1,0 +1,557 @@
+include "LocalDateTime.dfy"
+include "Duration.dfy"
+include "DateTimeUtils.dfy"
+
+module TestLocalDateTime {
+  import opened Std.BoundedInts
+  import LDT = LocalDateTime
+  import Duration = Duration
+  import DTUtils = DateTimeUtils
+
+  method TestOfFunction()
+  {
+    var result1 := LDT.Of(2023, 6, 15, 14, 30, 45, 123);
+    if result1.Success? {
+      var dt1 := result1.value;
+      assert dt1.year == 2023 && dt1.month == 6 && dt1.day == 15;
+      assert dt1.hour == 14 && dt1.minute == 30 && dt1.second == 45 && dt1.millisecond == 123;
+      assert LDT.IsValidLocalDateTime(dt1);
+    }
+
+    var leapYearResult := LDT.Of(2020, 2, 29, 0, 0, 0, 0);
+    if leapYearResult.Success? {
+      var leapDt := leapYearResult.value;
+      assert leapDt.year == 2020 && leapDt.month == 2 && leapDt.day == 29;
+      assert LDT.IsValidLocalDateTime(leapDt);
+    }
+
+    // Test invalid cases
+    var invalidMonth1 := LDT.Of(2023, 0, 15, 14, 30, 45, 123);   // Month too low
+    var invalidMonth2 := LDT.Of(2023, 13, 15, 14, 30, 45, 123);  // Month too high
+    var invalidDay1 := LDT.Of(2023, 6, 0, 14, 30, 45, 123);     // Day too low
+    var invalidDay2 := LDT.Of(2023, 6, 32, 14, 30, 45, 123);    // Day too high for June
+    var invalidDay3 := LDT.Of(2023, 2, 29, 14, 30, 45, 123);    // Feb 29 in non-leap year
+    var invalidDay4 := LDT.Of(2023, 4, 31, 14, 30, 45, 123);    // April 31st doesn't exist
+    var invalidHour1 := LDT.Of(2023, 6, 15, -1, 30, 45, 123);   // Hour too low
+    var invalidHour2 := LDT.Of(2023, 6, 15, 24, 30, 45, 123);   // Hour too high
+    var invalidMinute1 := LDT.Of(2023, 6, 15, 14, -1, 45, 123); // Minute too low
+    var invalidMinute2 := LDT.Of(2023, 6, 15, 14, 60, 45, 123); // Minute too high
+    var invalidSecond1 := LDT.Of(2023, 6, 15, 14, 30, -1, 123); // Second too low
+    var invalidSecond2 := LDT.Of(2023, 6, 15, 14, 30, 60, 123); // Second too high
+    var invalidMs1 := LDT.Of(2023, 6, 15, 14, 30, 45, -1);      // Millisecond too low
+    var invalidMs2 := LDT.Of(2023, 6, 15, 14, 30, 45, 1000);    // Millisecond too high
+
+    assert invalidMonth1.Failure?;
+    assert invalidMonth2.Failure?;
+    assert invalidDay1.Failure?;
+    assert invalidDay2.Failure?;
+    assert invalidDay3.Failure?;
+    assert invalidDay4.Failure?;
+    assert invalidHour1.Failure?;
+    assert invalidHour2.Failure?;
+    assert invalidMinute1.Failure?;
+    assert invalidMinute2.Failure?;
+    assert invalidSecond1.Failure?;
+    assert invalidSecond2.Failure?;
+    assert invalidMs1.Failure?;
+    assert invalidMs2.Failure?;
+  }
+
+  method TestParseFunction()
+  {
+    var validResult1 := LDT.Parse("2023-06-15T14:30:45.123", LDT.ISO8601);
+    if validResult1.Success? {
+      var dt1 := validResult1.value;
+      assert LDT.IsValidLocalDateTime(dt1);
+    }
+
+    // Test invalid format cases - these should return Failure
+    var invalidFormat1 := LDT.Parse("2023/06/15 14:30:45", LDT.ISO8601);     // Wrong separators
+    var invalidFormat2 := LDT.Parse("2023-06-15", LDT.ISO8601);              // Too short
+    var invalidFormat3 := LDT.Parse("2023-06-15T14:30:45", LDT.ISO8601);     // Missing milliseconds
+    var invalidFormat4 := LDT.Parse("15-06-2023T14:30:45.123", LDT.ISO8601); // Wrong date order
+    var invalidFormat5 := LDT.Parse("2023-6-15T14:30:45.123", LDT.ISO8601);  // Single digit month
+    var invalidFormat6 := LDT.Parse("2023-06-5T14:30:45.123", LDT.ISO8601);  // Single digit day
+    var invalidFormat7 := LDT.Parse("2023-06-15T4:30:45.123", LDT.ISO8601);  // Single digit hour
+    var invalidFormat8 := LDT.Parse("2023-06-15T14:3:45.123", LDT.ISO8601);  // Single digit minute
+    var invalidFormat9 := LDT.Parse("2023-06-15T14:30:5.123", LDT.ISO8601);  // Single digit second
+    var invalidFormat10 := LDT.Parse("2023-06-15T14:30:45.12", LDT.ISO8601); // Wrong millisecond length
+    var invalidFormat11 := LDT.Parse("", LDT.ISO8601);                       // Empty string
+    var invalidFormat12 := LDT.Parse("not-a-date", LDT.ISO8601);             // Completely invalid
+
+    // Verify format failures
+    assert invalidFormat1.Failure?;
+    assert invalidFormat2.Failure?;
+    assert invalidFormat3.Failure?;
+    assert invalidFormat4.Failure?;
+    assert invalidFormat5.Failure?;
+    assert invalidFormat6.Failure?;
+    assert invalidFormat7.Failure?;
+    assert invalidFormat8.Failure?;
+    assert invalidFormat9.Failure?;
+    assert invalidFormat10.Failure?;
+    assert invalidFormat11.Failure?;
+    assert invalidFormat12.Failure?;
+  }
+
+  method TestDateOnlyParsing()
+  {
+    // Test valid DateOnly parsing - simplified to avoid verification timeout
+    var validDateOnly1 := LDT.Parse("2023-06-15", LDT.DateOnly);
+    expect validDateOnly1.Success?;
+    if validDateOnly1.Success? {
+      var dt := validDateOnly1.value;
+      expect LDT.IsValidLocalDateTime(dt);
+    }
+
+    var validDateOnly2 := LDT.Parse("2024-02-29", LDT.DateOnly); // Leap year
+    expect validDateOnly2.Success?;
+
+    var validDateOnly3 := LDT.Parse("2000-12-31", LDT.DateOnly); // End of century leap year  
+    expect validDateOnly3.Success?;
+
+    // Test invalid DateOnly formats
+    var invalidDateOnly1 := LDT.Parse("2023/06/15", LDT.DateOnly);      // Wrong separators
+    var invalidDateOnly2 := LDT.Parse("2023-6-15", LDT.DateOnly);       // Single digit month
+    var invalidDateOnly3 := LDT.Parse("2023-06-5", LDT.DateOnly);       // Single digit day
+    var invalidDateOnly4 := LDT.Parse("23-06-15", LDT.DateOnly);        // Two digit year
+    var invalidDateOnly5 := LDT.Parse("2023-13-15", LDT.DateOnly);      // Invalid month
+    var invalidDateOnly6 := LDT.Parse("2023-02-30", LDT.DateOnly);      // Invalid day for February
+    var invalidDateOnly7 := LDT.Parse("2023-04-31", LDT.DateOnly);      // Invalid day for April
+    var invalidDateOnly8 := LDT.Parse("2023-06-15T14:30:45", LDT.DateOnly); // Too long
+    var invalidDateOnly9 := LDT.Parse("2023-06", LDT.DateOnly);         // Too short
+    var invalidDateOnly10 := LDT.Parse("", LDT.DateOnly);               // Empty string
+    var invalidDateOnly11 := LDT.Parse("not-a-date", LDT.DateOnly);     // Invalid format
+
+    // Verify DateOnly format failures
+    assert invalidDateOnly1.Failure?;
+    assert invalidDateOnly2.Failure?;
+    assert invalidDateOnly3.Failure?;
+    assert invalidDateOnly4.Failure?;
+    assert invalidDateOnly5.Failure?;
+    assert invalidDateOnly6.Failure?;
+    assert invalidDateOnly7.Failure?;
+    assert invalidDateOnly8.Failure?;
+    assert invalidDateOnly9.Failure?;
+    assert invalidDateOnly10.Failure?;
+    assert invalidDateOnly11.Failure?;
+
+    // Note: Parse function now only supports ISO8601 and DateOnly formats
+    // Other formats are not supported in the Parse function API
+  }
+
+  method TestCompareFunction()
+  {
+    var dt1 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+    var dt2 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 124);
+    var dt3 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+
+    var cmp1 := LDT.CompareLocal(dt1, dt2);
+    var cmp2 := LDT.CompareLocal(dt2, dt1);
+    var cmp3 := LDT.CompareLocal(dt1, dt3);
+
+    assert cmp1 == -1;  // dt1 < dt2
+    assert cmp2 == 1;   // dt2 > dt1
+    assert cmp3 == 0;   // dt1 == dt3
+  }
+
+  method TestArithmeticFunctions()
+  {
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+    var duration := Duration.FromMilliseconds(3661500); // 1 hour, 1 minute, 1 second, 500ms
+
+    var plusResult := LDT.PlusDuration(dt, duration);
+    expect LDT.GetHour(plusResult) == 15;  // Should be one hour later
+    expect LDT.GetMinute(plusResult) == 31; // Should be one minute later
+    expect LDT.GetSecond(plusResult) == 46; // Should be one second later
+    expect LDT.GetMillisecond(plusResult) == 623; // Should be 500ms later
+
+    var minusResult := LDT.MinusDuration(dt, duration);
+    expect LDT.GetHour(minusResult) == 13;  // Should be one hour earlier
+    expect LDT.GetMinute(minusResult) == 29; // Should be one minute earlier
+    expect LDT.GetSecond(minusResult) == 43;
+    expect LDT.GetMillisecond(minusResult) == 623; // 123 - 500 + 1000 = 623
+
+    // Test cross-day boundary
+    var lateNight := LDT.LocalDateTime(2023, 6, 15, 23, 30, 45, 123);
+    var longDuration := Duration.FromMilliseconds(7200000); // 2 hours
+    var nextDay := LDT.PlusDuration(lateNight, longDuration);
+    expect LDT.GetDay(nextDay) == 16;  // Should be next day
+    expect LDT.GetHour(nextDay) == 1;  // Should be 1:30 AM
+    expect LDT.GetMinute(nextDay) == 30;
+  }
+
+  method TestFormatFunction()
+  {
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+
+    // Test ISO format
+    var isoStr := LDT.ToString(dt);
+    assert isoStr == "2023-06-15T14:30:45.123";
+
+    // Test type-safe Format function with DateFormat datatype
+    var isoFormat := LDT.Format(dt, LDT.ISO8601);
+    assert isoFormat == "2023-06-15T14:30:45.123";
+
+    var dateOnly := LDT.Format(dt, LDT.DateOnly);
+    assert dateOnly == "2023-06-15";
+
+    var timeOnly := LDT.Format(dt, LDT.TimeOnly);
+    assert timeOnly == "14:30:45";
+
+    var dateTimeSpace := LDT.Format(dt, LDT.DateTimeSpace);
+    assert dateTimeSpace == "2023-06-15 14:30:45";
+
+    var ddmmyyyy := LDT.Format(dt, LDT.DateSlashDDMMYYYY);
+    assert ddmmyyyy == "15/06/2023";
+
+    var mmddyyyy := LDT.Format(dt, LDT.DateSlashMMDDYYYY);
+    assert mmddyyyy == "06/15/2023";
+
+    // Test string-based FormatString function with Result handling
+    var validDateOnlyResult := LDT.FormatString(dt, "yyyy-MM-dd");
+    assert validDateOnlyResult.Success?;
+    assert validDateOnlyResult.value == "2023-06-15";
+
+    var validTimeOnlyResult := LDT.FormatString(dt, "HH:mm:ss");
+    assert validTimeOnlyResult.Success?;
+    assert validTimeOnlyResult.value == "14:30:45";
+
+    var validISOResult := LDT.FormatString(dt, "yyyy-MM-ddTHH:mm:ss.fff");
+    assert validISOResult.Success?;
+    assert validISOResult.value == "2023-06-15T14:30:45.123";
+
+    // Test that unsupported patterns return Failure
+    var unsupportedResult1 := LDT.FormatString(dt, "yyyy/MM/dd");
+    assert unsupportedResult1.Failure?;
+
+    var unsupportedResult2 := LDT.FormatString(dt, "custom");
+    assert unsupportedResult2.Failure?;
+
+    var unsupportedResult3 := LDT.FormatString(dt, "dd-MM-yyyy");
+    assert unsupportedResult3.Failure?;
+  }
+
+
+  method TestWithNormalCase() {
+    var dt1 := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
+    assert LDT.IsValidLocalDateTime(dt1);
+
+    var dt1_with_new_year := LDT.WithYear(dt1, 2024);
+    assert dt1_with_new_year.year == 2024;
+
+    var dt1_with_new_month := LDT.WithMonth(dt1, 2);
+    assert dt1_with_new_month.month == 2;
+
+    var dt1_with_new_day := LDT.WithDayOfMonth(dt1, 28);
+    assert dt1_with_new_day.day == 28;
+
+    var dt1_with_new_hour := LDT.WithHour(dt1, 10);
+    assert dt1_with_new_hour.hour == 10;
+
+    var dt1_with_new_minute := LDT.WithMinute(dt1, 30);
+    assert dt1_with_new_minute.minute == 30;
+
+    var dt1_with_new_second := LDT.WithSecond(dt1, 45);
+    assert dt1_with_new_second.second == 45;
+
+    var dt1_with_new_millisecond := LDT.WithMillisecond(dt1, 999);
+    assert dt1_with_new_millisecond.millisecond == 999;
+  }
+
+  method TestWithNotNormalCase() {
+    var dt1 := LDT.LocalDateTime(2020, 2, 29, 15, 9, 26, 535);
+    assert LDT.IsValidLocalDateTime(dt1);
+
+    var dt1_with_new_year := LDT.WithYear(dt1, 2021);
+    assert dt1_with_new_year.year == 2021;
+    assert dt1_with_new_year.day == 28; // Clamped to 28 since 2021 is not a leap year
+
+    var dt2 := LDT.LocalDateTime(2020, 3, 31, 15, 9, 26, 535);
+    assert LDT.IsValidLocalDateTime(dt2);
+
+    var dt2_with_new_month := LDT.WithMonth(dt2, 4);
+    assert dt2_with_new_month.month == 4;
+    assert dt2_with_new_month.day == 30; // Clamped to 30 since April has 30 days
+  }
+
+  method TestGetters() {
+    var dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
+    assert LDT.IsValidLocalDateTime(dt);
+    assert LDT.GetYear(dt) == 2023;
+    assert LDT.GetMonth(dt) == 3;
+    assert LDT.GetDay(dt) == 14;
+    assert LDT.GetHour(dt) == 15;
+    assert LDT.GetMinute(dt) == 9;
+    assert LDT.GetSecond(dt) == 26;
+    assert LDT.GetMillisecond(dt) == 535;
+  }
+
+  method TestIsLeapYear() {
+    assert DTUtils.IsLeapYear(2020); // Divisible by 4 and not by 100
+    assert !DTUtils.IsLeapYear(2021); // Not divisible by 4
+    assert !DTUtils.IsLeapYear(1900); // Divisible by 100 but not by 400
+    assert DTUtils.IsLeapYear(2000); // Divisible by 400
+  }
+
+  method TestIsValidLocalDateTime() {
+    var valid_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 535);
+    assert LDT.IsValidLocalDateTime(valid_dt);
+
+    var invalid_month_dt := LDT.LocalDateTime(2023, 13, 14, 15, 9, 26, 535);
+    assert !LDT.IsValidLocalDateTime(invalid_month_dt);
+
+    var invalid_day_dt := LDT.LocalDateTime(2023, 2, 30, 15, 9, 26, 535);
+    assert !LDT.IsValidLocalDateTime(invalid_day_dt);
+
+    var invalid_hour_dt := LDT.LocalDateTime(2023, 3, 14, 24, 9, 26, 535);
+    assert !LDT.IsValidLocalDateTime(invalid_hour_dt);
+
+    var invalid_minute_dt := LDT.LocalDateTime(2023, 3, 14, 15, 60, 26, 535);
+    assert !LDT.IsValidLocalDateTime(invalid_minute_dt);
+
+    var invalid_second_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 60, 535);
+    assert !LDT.IsValidLocalDateTime(invalid_second_dt);
+
+    var invalid_millisecond_dt := LDT.LocalDateTime(2023, 3, 14, 15, 9, 26, 1000);
+    assert !LDT.IsValidLocalDateTime(invalid_millisecond_dt);
+  }
+
+  method TestDaysInMonth() {
+    assert DTUtils.DaysInMonth(2023, 1) == 31;
+    assert DTUtils.DaysInMonth(2023, 2) == 28;
+    assert DTUtils.DaysInMonth(2020, 2) == 29; // Leap year
+    assert DTUtils.DaysInMonth(2023, 4) == 30;
+    assert DTUtils.DaysInMonth(2023, 12) == 31;
+  }
+
+  method TestDaysInYear() {
+    assert DTUtils.DaysInYear(2023) == 365;
+    assert DTUtils.DaysInYear(2020) == 366; // Leap year
+  }
+
+
+
+  method TestPlusDays() {
+    // Test day overflow across month boundary
+    var june29 := LDT.LocalDateTime(2023, 6, 29, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(june29);
+    var plusThreeDays := LDT.PlusDays(june29, 3);
+    assert LDT.IsValidLocalDateTime(plusThreeDays);
+    expect plusThreeDays.year == 2023;
+    expect plusThreeDays.month == 7;
+    expect plusThreeDays.day == 2;
+
+    // Test day overflow across year boundary
+    var dec30 := LDT.LocalDateTime(2023, 12, 30, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(dec30);
+    var plusFiveDays := LDT.PlusDays(dec30, 5);
+    assert LDT.IsValidLocalDateTime(plusFiveDays);
+    expect plusFiveDays.year == 2024;
+    expect plusFiveDays.month == 1;
+    expect plusFiveDays.day == 4;
+  }
+
+  method TestPlusHours() {
+    // Test hour overflow across day boundary
+    var lateNight := LDT.LocalDateTime(2023, 6, 15, 22, 30, 45, 123);
+    assert LDT.IsValidLocalDateTime(lateNight);
+    var plusFiveHours := LDT.PlusHours(lateNight, 5);
+    assert LDT.IsValidLocalDateTime(plusFiveHours);
+    expect plusFiveHours.year == 2023;
+    expect plusFiveHours.month == 6;
+    expect plusFiveHours.day == 16;
+    expect plusFiveHours.hour == 3;
+    expect plusFiveHours.minute == 30;
+  }
+
+  method TestPlusMinutes() {
+    // Test minute overflow across hour boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 55, 45, 123);
+    assert LDT.IsValidLocalDateTime(dt);
+    var plusTenMinutes := LDT.PlusMinutes(dt, 10);
+    assert LDT.IsValidLocalDateTime(plusTenMinutes);
+    expect plusTenMinutes.hour == 15;
+    expect plusTenMinutes.minute == 5;
+    expect plusTenMinutes.second == 45;
+  }
+
+  method TestPlusSeconds() {
+    // Test second overflow across minute boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 55, 123);
+    assert LDT.IsValidLocalDateTime(dt);
+    var plusTenSeconds := LDT.PlusSeconds(dt, 10);
+    assert LDT.IsValidLocalDateTime(plusTenSeconds);
+    expect plusTenSeconds.minute == 31;
+    expect plusTenSeconds.second == 5;
+    expect plusTenSeconds.millisecond == 123;
+  }
+
+  method TestPlusMilliseconds() {
+    // Test millisecond overflow across second boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 950);
+    assert LDT.IsValidLocalDateTime(dt);
+    var plus100Millis := LDT.PlusMilliseconds(dt, 100);
+    assert LDT.IsValidLocalDateTime(plus100Millis);
+    expect plus100Millis.second == 46;
+    expect plus100Millis.millisecond == 50;
+  }
+
+
+
+  method TestMinusDays() {
+    // Test day underflow across month boundary
+    var july2 := LDT.LocalDateTime(2023, 7, 2, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(july2);
+    var minusThreeDays := LDT.MinusDays(july2, 3);
+    assert LDT.IsValidLocalDateTime(minusThreeDays);
+    expect minusThreeDays.year == 2023;
+    expect minusThreeDays.month == 6;
+    expect minusThreeDays.day == 29;
+
+    // Test day underflow across year boundary
+    var jan4 := LDT.LocalDateTime(2024, 1, 4, 10, 0, 0, 0);
+    assert LDT.IsValidLocalDateTime(jan4);
+    var minusFiveDays := LDT.MinusDays(jan4, 5);
+    assert LDT.IsValidLocalDateTime(minusFiveDays);
+    expect minusFiveDays.year == 2023;
+    expect minusFiveDays.month == 12;
+    expect minusFiveDays.day == 30;
+  }
+
+  method TestMinusHours() {
+    // Test hour underflow across day boundary
+    var earlyMorning := LDT.LocalDateTime(2023, 6, 16, 3, 30, 45, 123);
+    assert LDT.IsValidLocalDateTime(earlyMorning);
+    var minusFiveHours := LDT.MinusHours(earlyMorning, 5);
+    assert LDT.IsValidLocalDateTime(minusFiveHours);
+    expect minusFiveHours.year == 2023;
+    expect minusFiveHours.month == 6;
+    expect minusFiveHours.day == 15;
+    expect minusFiveHours.hour == 22;
+    expect minusFiveHours.minute == 30;
+  }
+
+  method TestMinusMinutes() {
+    // Test minute underflow across hour boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 15, 5, 45, 123);
+    assert LDT.IsValidLocalDateTime(dt);
+    var minusTenMinutes := LDT.MinusMinutes(dt, 10);
+    assert LDT.IsValidLocalDateTime(minusTenMinutes);
+    expect minusTenMinutes.hour == 14;
+    expect minusTenMinutes.minute == 55;
+    expect minusTenMinutes.second == 45;
+  }
+
+  method TestMinusSeconds() {
+    // Test second underflow across minute boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 31, 5, 123);
+    assert LDT.IsValidLocalDateTime(dt);
+    var minusTenSeconds := LDT.MinusSeconds(dt, 10);
+    assert LDT.IsValidLocalDateTime(minusTenSeconds);
+    expect minusTenSeconds.minute == 30;
+    expect minusTenSeconds.second == 55;
+    expect minusTenSeconds.millisecond == 123;
+  }
+
+  method TestMinusMilliseconds() {
+    // Test millisecond underflow across second boundary
+    var dt := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 50);
+    assert LDT.IsValidLocalDateTime(dt);
+    var minus100Millis := LDT.MinusMilliseconds(dt, 100);
+    assert LDT.IsValidLocalDateTime(minus100Millis);
+    expect minus100Millis.second == 45;
+    expect minus100Millis.millisecond == 950;
+  }
+
+  method TestComparisonMethods() {
+    // Create test date times
+    var dt1 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123);
+    var dt2 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 124); // 1ms later
+    var dt3 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 123); // Same as dt1
+    var dt4 := LDT.LocalDateTime(2023, 6, 15, 14, 30, 46, 123); // 1s later
+    var dt5 := LDT.LocalDateTime(2023, 6, 16, 14, 30, 45, 123); // 1 day later
+
+    assert LDT.IsValidLocalDateTime(dt1);
+    assert LDT.IsValidLocalDateTime(dt2);
+    assert LDT.IsValidLocalDateTime(dt3);
+    assert LDT.IsValidLocalDateTime(dt4);
+    assert LDT.IsValidLocalDateTime(dt5);
+
+    // Test IsBefore
+    assert LDT.IsBefore(dt1, dt2); // dt1 is before dt2 (1ms difference)
+    assert LDT.IsBefore(dt1, dt4); // dt1 is before dt4 (1s difference)
+    assert LDT.IsBefore(dt1, dt5); // dt1 is before dt5 (1 day difference)
+    assert !LDT.IsBefore(dt1, dt3); // dt1 is not before dt3 (same time)
+    assert !LDT.IsBefore(dt2, dt1); // dt2 is not before dt1
+
+    // Test IsAfter
+    assert LDT.IsAfter(dt2, dt1); // dt2 is after dt1
+    assert LDT.IsAfter(dt4, dt1); // dt4 is after dt1
+    assert LDT.IsAfter(dt5, dt1); // dt5 is after dt1
+    assert !LDT.IsAfter(dt1, dt3); // dt1 is not after dt3 (same time)
+    assert !LDT.IsAfter(dt1, dt2); // dt1 is not after dt2
+
+    // Test IsEqual
+    assert LDT.IsEqual(dt1, dt3); // dt1 equals dt3
+    assert LDT.IsEqual(dt3, dt1); // dt3 equals dt1 (symmetric)
+    assert !LDT.IsEqual(dt1, dt2); // dt1 does not equal dt2
+    assert !LDT.IsEqual(dt1, dt4); // dt1 does not equal dt4
+    assert !LDT.IsEqual(dt1, dt5); // dt1 does not equal dt5
+
+    // Test edge cases with different components
+    var earlyYear := LDT.LocalDateTime(2022, 6, 15, 14, 30, 45, 123);
+    var laterMonth := LDT.LocalDateTime(2023, 7, 15, 14, 30, 45, 123);
+    var earlierDay := LDT.LocalDateTime(2023, 6, 14, 14, 30, 45, 123);
+    var earlierHour := LDT.LocalDateTime(2023, 6, 15, 13, 30, 45, 123);
+    var earlierMinute := LDT.LocalDateTime(2023, 6, 15, 14, 29, 45, 123);
+    var earlierSecond := LDT.LocalDateTime(2023, 6, 15, 14, 30, 44, 123);
+    var earlierMs := LDT.LocalDateTime(2023, 6, 15, 14, 30, 45, 122);
+
+    assert LDT.IsValidLocalDateTime(earlyYear);
+    assert LDT.IsValidLocalDateTime(laterMonth);
+    assert LDT.IsValidLocalDateTime(earlierDay);
+    assert LDT.IsValidLocalDateTime(earlierHour);
+    assert LDT.IsValidLocalDateTime(earlierMinute);
+    assert LDT.IsValidLocalDateTime(earlierSecond);
+    assert LDT.IsValidLocalDateTime(earlierMs);
+
+    // Test different component comparisons
+    assert LDT.IsBefore(earlyYear, dt1); // Earlier year
+    assert LDT.IsAfter(laterMonth, dt1); // Later month
+    assert LDT.IsBefore(earlierDay, dt1); // Earlier day
+    assert LDT.IsBefore(earlierHour, dt1); // Earlier hour
+    assert LDT.IsBefore(earlierMinute, dt1); // Earlier minute
+    assert LDT.IsBefore(earlierSecond, dt1); // Earlier second
+    assert LDT.IsBefore(earlierMs, dt1); // Earlier millisecond
+  }
+}
+
+method Main()
+{
+  TestLocalDateTime.TestOfFunction();
+  TestLocalDateTime.TestParseFunction();
+  TestLocalDateTime.TestDateOnlyParsing();
+  TestLocalDateTime.TestCompareFunction();
+  TestLocalDateTime.TestArithmeticFunctions();
+  TestLocalDateTime.TestFormatFunction();
+  TestLocalDateTime.TestWithNormalCase();
+  TestLocalDateTime.TestWithNotNormalCase();
+  TestLocalDateTime.TestGetters();
+  TestLocalDateTime.TestIsLeapYear();
+  TestLocalDateTime.TestIsValidLocalDateTime();
+  TestLocalDateTime.TestDaysInMonth();
+  TestLocalDateTime.TestDaysInYear();
+  TestLocalDateTime.TestPlusDays();
+  TestLocalDateTime.TestPlusHours();
+  TestLocalDateTime.TestPlusMinutes();
+  TestLocalDateTime.TestPlusSeconds();
+  TestLocalDateTime.TestPlusMilliseconds();
+  TestLocalDateTime.TestMinusDays();
+  TestLocalDateTime.TestMinusHours();
+  TestLocalDateTime.TestMinusMinutes();
+  TestLocalDateTime.TestMinusSeconds();
+  TestLocalDateTime.TestMinusMilliseconds();
+  TestLocalDateTime.TestComparisonMethods();
+  print "All tests passed\n";
+}
